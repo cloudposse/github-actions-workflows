@@ -1,0 +1,169 @@
+name: Reusable - Hotfix
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      registry:
+        description: "Docker registry"
+        required: false
+        type: string
+        default: registry.hub.docker.com
+      default_branch:
+        description: "Default branch in the repo"
+        required: true
+        type: string
+        default: main
+    secrets:
+      github-private-actions-pat:
+        required: true
+      github-pat:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+
+jobs:
+  build:
+    runs-on: ["self-hosted"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout Private actions
+        uses: actions/checkout@v3
+        with:
+          repository: cloudposse/actions-private
+          ref: main
+          token: ${{ secrets.github-private-actions-pat }}
+          path: .github/actions
+
+      - name: Build
+        id: build
+        uses: ./.github/actions/build
+        with:
+          organization: ${{ inputs.organization }}
+          repository: ${{ inputs.repository }}
+          registry: ${{ inputs.registry }}
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+      tag: ${{ steps.build.outputs.tag }}
+
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get Previous tag
+        id: previoustag
+        shell: sh
+        run: |
+          git fetch --tags --force
+          git describe --always --tags --abbrev=0 ${{ github.sha }}
+          VERSION=$(git describe --always --tags --abbrev=0  ${{ github.sha }})
+          echo "::set-output name=version::${VERSION}"
+
+      - name: Get next minor version
+        id: semvers
+        uses: "WyriHaximus/github-action-next-semvers@v1"
+        with:
+          version: ${{ steps.previoustag.outputs.version }}
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.semvers.outputs.patch }}
+          commit: ${{ github.sha }}
+          generateReleaseNotes: true
+          token: ${{ github.token }}
+
+    outputs:
+      version: ${{ steps.semvers.outputs.patch }}
+
+  promote:
+    runs-on: ["self-hosted"]
+    needs: [ release, build ]
+    steps:
+      - name: Promote Docker image
+        uses: EuphoricSystems/docker-promote-image@1.0.0
+        with:
+          src: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:sha-${{ github.sha }}
+          destinations: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:${{ needs.release.outputs.version }}
+    outputs:
+      image: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}
+      tag: ${{ needs.release.outputs.version }}
+
+  deploy:
+    runs-on: ["self-hosted"]
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    needs: [ promote ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout Private actions
+        uses: actions/checkout@v3
+        with:
+          repository: cloudposse/actions-private
+          ref: main
+          token: ${{ secrets.github-private-actions-pat }}
+          path: .github/actions
+
+      - name: Environment Info
+        uses: ./.github/actions/environments
+        id: environment
+        with:
+          environment: production
+          namespace: production
+
+      - name: Deploy
+        id: deploy
+        uses: ./.github/actions/deploy
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          base-role: ${{ steps.environment.outputs.role }}
+          cluster: ${{ steps.environment.outputs.cluster }}
+          cluster-role: ${{ steps.environment.outputs.cluster-role }}
+          environment: ${{ steps.environment.outputs.name }}
+          namespace: ${{ steps.environment.outputs.namespace }}
+          image: ${{ needs.promote.outputs.image }}
+          image-tag: ${{ needs.promote.outputs.tag }}
+          operation: deploy
+
+  reintegrate:
+    runs-on: ubuntu-latest
+    needs: [ release, deploy ]
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Create reingtegration PR
+        uses: devops-infra/action-pull-request@v0.4.2
+        with:
+          github_token: ${{ secrets.github-pat }}
+          target_branch: ${{ inputs.default_branch }}
+          title: Reintegrate ${{ needs.release.outputs.version }} hotfix into main branch
+          template: .github/REINTEGRATE_PULL_REQUEST_TEMPLATE.md
+          get_diff: true
