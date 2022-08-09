@@ -1,2 +1,2 @@
-# github-actions-reference-architectures
-Github actions reference architectures
+# github-actions-workflows
+Github actions workflows
