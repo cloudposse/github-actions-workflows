@@ -1,6 +1,9 @@
 name: Reusable - Bleeding edge
 on: [ workflow_call ]
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
