@@ -41,19 +41,9 @@ jobs:
   context:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Checkout Private actions
-        uses: actions/checkout@v3
-        with:
-          repository: cloudposse/actions-private
-          ref: main
-          token: ${{ secrets.github-private-actions-pat }}
-          path: .github/actions
 
       - name: Preview deployments controller
-        uses: ./.github/actions/preview_controller
+        uses: cloudposse/github-action-preview-environment-controller@v0.7.0
         id: controller
         with:
           labels: ${{ inputs.labels }}
