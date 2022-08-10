@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Preview deployments controller
-        uses: cloudposse/github-action-preview-environment-controller
+        uses: cloudposse/github-action-preview-environment-controller@v0.7.0
         id: controller
         with:
           labels: ${{ inputs.labels }}
