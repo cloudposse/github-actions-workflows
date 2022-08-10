@@ -1,0 +1,19 @@
+name: Reusable - Pull Request
+on: [ workflow_call ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: YAML file validation
+        uses: mpoc/nexus-validate-using-remote-schema-action@main
+        with:
+          api-endpoint: https://json.schemastore.org/github-action.json
+          yaml-file: action.yml

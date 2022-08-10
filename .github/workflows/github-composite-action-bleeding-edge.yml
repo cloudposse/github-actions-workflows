@@ -1,0 +1,34 @@
+name: Reusable - Bleeding edge
+on: [ workflow_call ]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: YAML file validation
+        uses: mpoc/nexus-validate-using-remote-schema-action@main
+        with:
+          api-endpoint: https://json.schemastore.org/github-action.json
+          yaml-file: action.yml
+
+  semver:
+    runs-on: ubuntu-latest
+    needs: [ lint ]
+    permissions:
+      contents: write
+    steps:
+      - name: Create/Update Draft release
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: false
+          prerelease: false
+          config-name: configs/draft-release.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
