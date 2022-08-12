@@ -1,11 +1,45 @@
 name: Reusable - Pull Request
-on: [ workflow_call ]
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+      tests-prefix:
+        required: false
+        type: string
+        default: 'test-*'
+    secrets:
+      github-private-actions-pat:
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+
+      - name: Workflows
+        id: workflows
+        shell: bash
+        run: |
+          TEST_FILES=$(find ./.github/workflows -type f -name "${{ inputs.tests-prefix }}" -exec basename {} \; | jq -MRc -s '. | split("\n") | map(select(. != ""))')
+          echo "::set-output name=list::${TEST_FILES}"
+
+    outputs:
+      tests: ${{ steps.workflows.outputs.list }}
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -17,3 +51,24 @@ jobs:
         with:
           api-endpoint: https://json.schemastore.org/github-action.json
           yaml-file: action.yml
+
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ needs.context.outputs.tests != '[]'  }}
+    strategy:
+      matrix:
+        env: ${{ fromJson(needs.context.outputs.tests) }}
+    needs: [ lint, context ]
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.6.1
+        with:
+          owner: ${{ inputs.organization }}
+          repo: ${{ inputs.repository }}
+          github_token: ${{ secrets.github-private-actions-pat }}
+          workflow_file_name: ${{ matrix.env }}
+          ref: ${{ inputs.ref }}
+          wait_interval: 10
+          client_payload: '{}'
+          propagate_failure: true
+          trigger_workflow: true
+          wait_workflow: true
