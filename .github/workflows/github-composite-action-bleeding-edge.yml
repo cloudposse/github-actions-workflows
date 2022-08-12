@@ -9,7 +9,8 @@ on:
         required: true
         type: string
       ref:
-        required: true
+        required: false
+        default: ${{ github.ref }}
         type: string
       tests-prefix:
         required: false
