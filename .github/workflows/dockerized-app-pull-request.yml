@@ -67,7 +67,7 @@ jobs:
 
       - name: Build
         id: build
-        uses: /actions/docker-build-and-push@v0.1.0
+        uses: actions/docker-build-and-push@v0.1.0
         with:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}
