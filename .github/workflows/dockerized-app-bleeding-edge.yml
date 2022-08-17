@@ -36,17 +36,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Checkout Private actions
-        uses: actions/checkout@v3
-        with:
-          repository: cloudposse/actions-private
-          ref: main
-          token: ${{ secrets.github-private-actions-pat }}
-          path: .github/actions
-
       - name: Build
         id: build
-        uses: ./.github/actions/build
+        uses: cloudposse/github-action-docker-build-push@v0.1.0
         with:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}
