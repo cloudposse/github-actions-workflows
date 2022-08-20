@@ -79,8 +79,8 @@ jobs:
 
   semver:
     runs-on: ubuntu-latest
-    needs: [ test ]
-    if: ${{ always() && ( needs.test.result == 'success' || needs.test.result == 'skipped' ) }}
+    needs: [ test, lint ]
+    if: ${{ always() && ( needs.test.result == 'success' || needs.test.result == 'skipped' ) && needs.lint.result == 'success' }}
     permissions:
       contents: write
     steps:
