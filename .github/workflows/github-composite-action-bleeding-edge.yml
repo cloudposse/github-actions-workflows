@@ -80,7 +80,7 @@ jobs:
   semver:
     runs-on: ubuntu-latest
     needs: [ test ]
-    if: ${{ needs.test.result == 'success' || needs.test.result == 'skipped' }}
+    if: ${{ always() && ( needs.test.result == 'success' || needs.test.result == 'skipped' ) }}
     permissions:
       contents: write
     steps:
