@@ -106,7 +106,7 @@ jobs:
           namespace: dev
 
       - name: Deploy
-        uses: ./.github/actions/deploy
+        uses: cloudposse/github-action-deploy-helmfile@0.1.0
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}

@@ -125,7 +125,7 @@ jobs:
           namespace: ${{ needs.context.outputs.namespace }}
 
       - name: Deploy
-        uses: ./.github/actions/deploy
+        uses: cloudposse/github-action-deploy-helmfile@0.1.0
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}
@@ -183,7 +183,7 @@ jobs:
           namespace: ${{ needs.context.outputs.namespace }}
 
       - name: Destroy
-        uses: ./.github/actions/deploy
+        uses: cloudposse/github-action-deploy-helmfile@0.1.0
         if: ${{ steps.deployment.outputs.deploymentId != '' }}
         id: deploy
         with:
