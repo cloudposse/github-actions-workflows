@@ -91,9 +91,9 @@ jobs:
         id: test
         uses: cloudposse/github-action-docker-compose-test-run@0.1.0
         with:
-          file: codefresh/test/docker-compose.yml
+          file: test/docker-compose.yml
           service: app
-          command: codefresh/test/test.sh
+          command: test/test.sh
 
   deploy:
     runs-on: ["self-hosted"]
