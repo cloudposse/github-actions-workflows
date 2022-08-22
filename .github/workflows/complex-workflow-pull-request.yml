@@ -152,10 +152,14 @@ jobs:
           status: success
 
       - name: Environment Info
-        uses: ./.github/actions/environments
+        uses: cloudposse/github-action-interface-environment@0.1.0
         if: ${{ steps.deployment.outputs.deploymentId != '' }}
         id: environment
         with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'environments/'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
           namespace: ${{ needs.context.outputs.namespace }}
 
@@ -174,13 +178,6 @@ jobs:
           image-tag: "<none>"
           operation: destroy
 
-      - name: Cleanup label
-        uses: ./.github/actions/preview_controller_label_cleanup
-        if: ${{ ! inputs.open }}
-        with:
-          labels_env: ${{ needs.context.outputs.labels_env }}
-          env: ${{ matrix.env }}
-
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0
         if: ${{ steps.deployment.outputs.deploymentId != '' }}
@@ -188,3 +185,10 @@ jobs:
           state: inactive
           token: ${{ github.token }}
           deployment-id: ${{ steps.deployment.outputs.deploymentId }}
+
+      - name: Cleanup label
+        uses: ./.github/actions/preview_controller_label_cleanup
+        if: ${{ ! inputs.open }}
+        with:
+          labels_env: ${{ needs.context.outputs.labels_env }}
+          env: ${{ matrix.env }}

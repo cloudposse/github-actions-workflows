@@ -90,14 +90,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Checkout Private actions
-        uses: actions/checkout@v3
-        with:
-          repository: cloudposse/actions-private
-          ref: main
-          token: ${{ secrets.github-private-actions-pat }}
-          path: .github/actions
-
       - name: Deactive environment
         uses: bobheadxi/deployments@v1
         with:
@@ -106,11 +98,14 @@ jobs:
           env: ${{ matrix.env }}
           desc: Environment purged
 
-
       - name: Environment Info
-        uses: ./.github/actions/environments
+        uses: cloudposse/github-action-interface-environment@0.1.0
         id: environment
         with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'environments/'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
           namespace: ${{ matrix.env }}
 
@@ -160,10 +155,14 @@ jobs:
           status: success
 
       - name: Environment Info
-        uses: ./.github/actions/environments
+        uses: cloudposse/github-action-interface-environment@0.1.0
         if: ${{ steps.deployment.outputs.deploymentId != '' }}
         id: environment
         with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'environments/'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
           namespace: ${{ matrix.env }}
 
@@ -182,13 +181,6 @@ jobs:
           image-tag: "<none>"
           operation: destroy
 
-      - name: Cleanup label
-        uses: ./.github/actions/preview_controller_label_cleanup
-        if: ${{ ! inputs.open }}
-        with:
-          labels_env: ${{ needs.context.outputs.labels_env }}
-          env: ${{ matrix.env }}
-
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0
         if: ${{ steps.deployment.outputs.deploymentId != '' }}
@@ -196,3 +188,10 @@ jobs:
           state: inactive
           token: ${{ github.token }}
           deployment-id: ${{ steps.deployment.outputs.deploymentId }}
+
+      - name: Cleanup label
+        uses: ./.github/actions/preview_controller_label_cleanup
+        if: ${{ ! inputs.open }}
+        with:
+          labels_env: ${{ needs.context.outputs.labels_env }}
+          env: ${{ matrix.env }}

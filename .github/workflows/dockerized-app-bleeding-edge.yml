@@ -90,23 +90,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-#      - name: Checkout Private actions
-#        uses: actions/checkout@v3
-#        with:
-#          repository: cloudposse/actions-private
-#          ref: main
-#          token: ${{ secrets.github-private-actions-pat }}
-#          path: .github/actions
-#
-#      - name: Environment Info
-#        uses: ./.github/actions/environments
-#        id: environment
-#        with:
-#          environment: dev
-#          namespace: dev
-
       - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@init
+        uses: cloudposse/github-action-interface-environment@0.1.0
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
