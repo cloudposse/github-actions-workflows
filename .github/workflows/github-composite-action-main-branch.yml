@@ -77,7 +77,8 @@ jobs:
           trigger_workflow: true
           wait_workflow: true
 
-  semver:
+  draft_release:
+    name: draft release
     runs-on: ubuntu-latest
     needs: [ test, lint ]
     if: ${{ always() && ( needs.test.result == 'success' || needs.test.result == 'skipped' ) && needs.lint.result == 'success' }}

@@ -65,21 +65,6 @@ jobs:
           service: app
           command: test/test.sh
 
-  semver:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - name: Create/Update Draft release
-        uses: release-drafter/release-drafter@v5
-        with:
-          publish: false
-          prerelease: false
-          config-name: configs/draft-release.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   deploy:
     runs-on: ["self-hosted"]
     environment:
@@ -118,3 +103,21 @@ jobs:
           ISTIO_INSTALLED: false
           COLOR: green
           RELEASE_NAME: example-app-green
+
+  draft_release:
+    name: draft release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [ deploy ]
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - name: Create/Update Draft release
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: false
+          prerelease: false
+          config-name: configs/draft-release.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
