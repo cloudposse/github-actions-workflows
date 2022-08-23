@@ -1,4 +1,4 @@
-name: Reusable - Bleeding edge
+name: Dockerized Appication - Main branch
 on:
   workflow_call:
     inputs:
@@ -14,6 +14,10 @@ on:
         type: string
         default: registry.hub.docker.com
     secrets:
+      docker-login:
+        required: true
+      docker-password:
+        required: true
       github-private-actions-pat:
         required: true
 
@@ -39,10 +43,27 @@ jobs:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}
           registry: ${{ inputs.registry }}
+          login: ${{ secrets.docker-login }}
+          password: ${{ secrets.docker-password }}
 
     outputs:
       image: ${{ steps.build.outputs.image }}
       tag: ${{ steps.build.outputs.tag }}
+
+  test:
+    runs-on: ["self-hosted"]
+    needs: [ build ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Tests
+        id: test
+        uses: cloudposse/github-action-docker-compose-test-run@0.1.0
+        with:
+          file: test/docker-compose.yml
+          service: app
+          command: test/test.sh
 
   semver:
     runs-on: ubuntu-latest
@@ -64,7 +85,7 @@ jobs:
     environment:
       name: dev
       url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ build ]
+    needs: [ build, test ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -93,3 +114,7 @@ jobs:
           image: ${{ needs.build.outputs.image }}
           image-tag: ${{ needs.build.outputs.tag }}
           operation: deploy
+        env:
+          ISTIO_INSTALLED: false
+          COLOR: green
+          RELEASE_NAME: example-app-green

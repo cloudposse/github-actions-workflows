@@ -1,4 +1,4 @@
-name: Reusable - Hotfix
+name: Complex workflow - Hotfix release
 on:
   workflow_call:
     inputs:

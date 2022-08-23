@@ -1,4 +1,4 @@
-name: Reusable - Hotfix - Pull Request
+name: Dockerized Appication - Feature branch
 on:
   workflow_call:
     inputs:
@@ -24,6 +24,10 @@ on:
         required: true
         type: string
     secrets:
+      docker-login:
+        required: true
+      docker-password:
+        required: true
       github-private-actions-pat:
         required: true
 
@@ -39,7 +43,6 @@ jobs:
   context:
     runs-on: ubuntu-latest
     steps:
-
       - name: Preview deployments controller
         uses: cloudposse/github-action-preview-environment-controller@v0.7.0
         id: controller
@@ -47,10 +50,10 @@ jobs:
           labels: ${{ inputs.labels }}
           open: ${{ inputs.open }}
           env-label: |
-            hotfix: deploy
+            preview: deploy
 
     outputs:
-      stack: staging
+      namespace: ${{ inputs.ref }}
       labels_env: ${{ steps.controller.outputs.labels_env }}
       deploy_envs: ${{ steps.controller.outputs.deploy_envs }}
       destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
@@ -69,15 +72,31 @@ jobs:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}
           registry: ${{ inputs.registry }}
+          login: ${{ secrets.docker-login }}
+          password: ${{ secrets.docker-password }}
 
     outputs:
       image: ${{ steps.build.outputs.image }}
       tag: ${{ steps.build.outputs.tag }}
 
+  test:
+    runs-on: ["self-hosted"]
+    if: ${{ inputs.open }}
+    needs: [ build ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Tests
+        id: test
+        uses: cloudposse/github-action-docker-compose-test-run@0.1.0
+        with:
+          file: test/docker-compose.yml
+          service: app
+          command: test/test.sh
+
   deploy:
     runs-on: ["self-hosted"]
-    permissions:
-      deployments: write
     if: ${{ needs.context.outputs.deploy_envs != '[]'  }}
     strategy:
       matrix:
@@ -85,29 +104,21 @@ jobs:
     environment:
       name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ context, build ]
+    needs: [ context, build, test ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Deactive environment
-        uses: bobheadxi/deployments@v1
-        with:
-          step: deactivate-env
-          token: ${{ github.token }}
-          env: ${{ matrix.env }}
-          desc: Environment purged
 
       - name: Environment Info
         uses: cloudposse/github-action-interface-environment@0.1.0
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments/'
+          implementation_path: 'environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ matrix.env }}
+          namespace: ${{ needs.context.outputs.namespace }}
 
       - name: Deploy
         uses: cloudposse/github-action-deploy-helmfile@0.1.0
@@ -122,16 +133,21 @@ jobs:
           image: ${{ needs.build.outputs.image }}
           image-tag: ${{ needs.build.outputs.tag }}
           operation: deploy
+          debug: false
+        env:
+          ISTIO_INSTALLED: false
+          COLOR: green
+          RELEASE_NAME: example-app-green
 
   destroy:
     runs-on: ["self-hosted"]
     if: ${{ needs.context.outputs.destroy_envs != '[]'  }}
-    permissions:
-      pull-requests: write
-      deployments: write
     strategy:
       matrix:
         env: ${{ fromJson(needs.context.outputs.destroy_envs) }}
+    permissions:
+      pull-requests: write
+      deployments: write
     needs: [ context ]
     steps:
       - name: Checkout
@@ -151,7 +167,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           env-name: ${{ matrix.env }}
-          ref-to-search: ${{ inputs.ref}}
+          ref-to-search: ${{ inputs.ref }}
           status: success
 
       - name: Environment Info
@@ -160,11 +176,11 @@ jobs:
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments/'
+          implementation_path: 'environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ matrix.env }}
+          namespace: ${{ needs.context.outputs.namespace }}
 
       - name: Destroy
         uses: cloudposse/github-action-deploy-helmfile@0.1.0
@@ -180,6 +196,11 @@ jobs:
           image: "<none>"
           image-tag: "<none>"
           operation: destroy
+          debug: false
+        env:
+          ISTIO_INSTALLED: false
+          COLOR: green
+          RELEASE_NAME: example-app-green
 
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0

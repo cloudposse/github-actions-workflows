@@ -1,4 +1,4 @@
-name: Reusable - Pull Request
+name: Github Action - Main Branch
 on:
   workflow_call:
     inputs:
@@ -9,7 +9,8 @@ on:
         required: true
         type: string
       ref:
-        required: true
+        required: false
+        default: ${{ github.ref }}
         type: string
       tests-prefix:
         required: false
@@ -19,8 +20,11 @@ on:
       github-private-actions-pat:
         required: true
 
+permissions:
+  contents: write
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:
@@ -72,3 +76,19 @@ jobs:
           propagate_failure: true
           trigger_workflow: true
           wait_workflow: true
+
+  semver:
+    runs-on: ubuntu-latest
+    needs: [ test, lint ]
+    if: ${{ always() && ( needs.test.result == 'success' || needs.test.result == 'skipped' ) && needs.lint.result == 'success' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Create/Update Draft release
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: false
+          prerelease: false
+          config-name: configs/draft-release.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
