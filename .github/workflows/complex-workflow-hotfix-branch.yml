@@ -146,7 +146,7 @@ jobs:
           path: .github/actions
 
       - name: Seek deployment
-        uses: cloudposse/github-action-seek-deployment@v0.1.0
+        uses: cloudposse/github-action-seek-deployment@0.1.0
         id: deployment
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
