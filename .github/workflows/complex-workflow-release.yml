@@ -1,4 +1,4 @@
-name: Complex workflow - Release
+sname: Complex workflow - Release
 on:
   workflow_call:
     inputs:
