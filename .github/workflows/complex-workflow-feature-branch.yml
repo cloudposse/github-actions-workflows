@@ -143,13 +143,13 @@ jobs:
         id: deployment
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          env-name: ${{ matrix.env }}
-          ref-to-search: ${{ inputs.ref }}
+          environment: ${{ matrix.env }}
+          ref: ${{ inputs.ref }}
           status: success
 
       - name: Environment Info
         uses: cloudposse/github-action-interface-environment@0.1.0
-        if: ${{ steps.deployment.outputs.deploymentId != '' }}
+        if: ${{ steps.deployment.outputs.id != '' }}
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
@@ -161,7 +161,7 @@ jobs:
 
       - name: Destroy
         uses: cloudposse/github-action-deploy-helmfile@0.1.0
-        if: ${{ steps.deployment.outputs.deploymentId != '' }}
+        if: ${{ steps.deployment.outputs.id != '' }}
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}
@@ -176,11 +176,11 @@ jobs:
 
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0
-        if: ${{ steps.deployment.outputs.deploymentId != '' }}
+        if: ${{ steps.deployment.outputs.id != '' }}
         with:
           state: inactive
           token: ${{ github.token }}
-          deployment-id: ${{ steps.deployment.outputs.deploymentId }}
+          deployment-id: ${{ steps.deployment.outputs.id }}
 
       - name: Cleanup label
         uses: ./.github/actions/preview_controller_label_cleanup
