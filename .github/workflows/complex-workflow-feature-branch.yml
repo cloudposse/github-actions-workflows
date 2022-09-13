@@ -130,14 +130,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Checkout Private actions
-        uses: actions/checkout@v3
-        with:
-          repository: cloudposse/actions-private
-          ref: main
-          token: ${{ secrets.github-private-actions-pat }}
-          path: .github/actions
-
       - name: Seek deployment
         uses: cloudposse/github-action-seek-deployment@0.1.0
         id: deployment
@@ -183,7 +175,7 @@ jobs:
           deployment-id: ${{ steps.deployment.outputs.id }}
 
       - name: Cleanup label
-        uses: ./.github/actions/preview_controller_label_cleanup
+        uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
         if: ${{ ! inputs.open }}
         with:
           labels_env: ${{ needs.context.outputs.labels_env }}
