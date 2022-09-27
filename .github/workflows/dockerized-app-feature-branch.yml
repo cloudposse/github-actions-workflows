@@ -89,12 +89,15 @@ jobs:
 
       - name: Tests
         id: test
-        uses: cloudposse/github-action-docker-compose-test-run@0.1.0
+        uses: cloudposse/github-action-docker-compose-test-run@0.1.1
         with:
           file: test/docker-compose.yml
           service: app
           command: test/test.sh
-
+          registry: ${{ inputs.registry }}
+          login: ${{ secrets.docker-login }}
+          password: ${{ secrets.docker-password }}
+          
   deploy:
     runs-on: ["self-hosted"]
     if: ${{ needs.context.outputs.deploy_envs != '[]'  }}
