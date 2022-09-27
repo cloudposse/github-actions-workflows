@@ -89,14 +89,19 @@ jobs:
           environment: dev
           namespace: dev
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
+          role-session-name: deploy
+
       - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.1.0
+        uses: cloudposse/github-action-deploy-helmfile@0.2.0
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          base-role: ${{ steps.environment.outputs.role }}
           cluster: ${{ steps.environment.outputs.cluster }}
-          cluster-role: ${{ steps.environment.outputs.cluster-role }}
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ needs.build.outputs.image }}
