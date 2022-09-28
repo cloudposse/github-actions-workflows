@@ -128,7 +128,6 @@ jobs:
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-session-name: deploy
 
       - name: Deploy
         uses: cloudposse/github-action-deploy-helmfile@0.2.0
@@ -187,7 +186,6 @@ jobs:
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-session-name: deploy
 
       - name: Destroy
         uses: cloudposse/github-action-deploy-helmfile@0.1.0
