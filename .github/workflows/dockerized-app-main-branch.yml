@@ -94,6 +94,7 @@ jobs:
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.cluster-role }}
+          role-skip-session-tagging: true
 
       - name: Deploy
         uses: cloudposse/github-action-deploy-helmfile@0.2.0
