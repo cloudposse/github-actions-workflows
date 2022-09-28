@@ -156,6 +156,8 @@ jobs:
     permissions:
       pull-requests: write
       deployments: write
+      id-token: write
+      contents: read
     needs: [ context ]
     steps:
       - name: Checkout
