@@ -34,6 +34,8 @@ on:
 permissions:
   pull-requests: write
   deployments: write
+  id-token: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
