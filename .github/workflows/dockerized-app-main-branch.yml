@@ -97,11 +97,6 @@ jobs:
           role-to-assume: ${{ steps.environment.outputs.cluster-role }}
           role-skip-session-tagging: true
 
-      - name: S3 Sync
-        uses: ItsKarma/aws-cli@v1.70.0
-        with:
-          args: eks --region ${{ steps.environment.outputs.region }} update-kubeconfig --name ${{ steps.environment.outputs.cluster }}
-
       - name: Deploy
         uses: cloudposse/github-action-deploy-helmfile@0.2.0
         id: deploy
