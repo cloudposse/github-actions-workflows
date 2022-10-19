@@ -178,6 +178,7 @@ jobs:
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
+        if: ${{ steps.deployment.outputs.id != '' }}
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.cluster-role }}
