@@ -8,11 +8,6 @@ on:
       repository:
         required: true
         type: string
-      registry:
-        description: "Docker registry"
-        required: false
-        type: string
-        default: registry.hub.docker.com
       open:
         required: true
         type: boolean
@@ -24,9 +19,8 @@ on:
         required: true
         type: string
     secrets:
-      docker-login:
-        required: true
-      docker-password:
+      registry:
+        description: "Docker registry"
         required: true
       github-private-actions-pat:
         required: true
@@ -73,9 +67,7 @@ jobs:
         with:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}
-          registry: ${{ inputs.registry }}
-          login: ${{ secrets.docker-login }}
-          password: ${{ secrets.docker-password }}
+          registry: ${{ secrets.registry }}
 
     outputs:
       image: ${{ steps.build.outputs.image }}
@@ -96,9 +88,7 @@ jobs:
           file: test/docker-compose.yml
           service: app
           command: test/test.sh
-          registry: ${{ inputs.registry }}
-          login: ${{ secrets.docker-login }}
-          password: ${{ secrets.docker-password }}
+          registry: ${{ secrets.registry }}
 
   deploy:
     runs-on: ["self-hosted"]
@@ -207,7 +197,6 @@ jobs:
           operation: destroy
           debug: false
         env:
-          ISTIO_INSTALLED: false
           COLOR: green
           RELEASE_NAME: example-app-green
 
