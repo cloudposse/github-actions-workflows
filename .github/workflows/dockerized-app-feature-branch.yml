@@ -70,7 +70,7 @@ jobs:
           registry: ${{ secrets.registry }}
 
     outputs:
-      image: ${{ secrets.registry }}/${{ steps.build.outputs.image }}
+      image: ${{ steps.build.outputs.image }}
       tag: ${{ steps.build.outputs.tag }}
 
   test:
@@ -130,7 +130,7 @@ jobs:
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ needs.build.outputs.image }}
+          image: ${{ secrets.registry }}/${{ needs.build.outputs.image }}
           image-tag: ${{ needs.build.outputs.tag }}
           operation: deploy
           debug: false
