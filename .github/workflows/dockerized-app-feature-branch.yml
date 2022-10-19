@@ -70,7 +70,7 @@ jobs:
           registry: ${{ secrets.registry }}
 
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      image: ${{ secrets.registry }}/${{ steps.build.outputs.image }}
       tag: ${{ steps.build.outputs.tag }}
 
   test:
