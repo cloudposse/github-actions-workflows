@@ -75,7 +75,7 @@ jobs:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
         with:
-          secret: ${{ secret.secret-outputs-passphrase }}
+          secret: ${{ secrets.secret-outputs-passphrase }}
           op: encode
           in: ${{ steps.build.outputs.image }}
 
@@ -114,7 +114,7 @@ jobs:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
         with:
-          secret: ${{ secret.secret-outputs-passphrase }}
+          secret: ${{ secrets.secret-outputs-passphrase }}
           op: decode
           in: ${{ needs.build.outputs.image }}
 
