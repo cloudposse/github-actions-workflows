@@ -19,6 +19,9 @@ on:
         required: true
         type: string
     secrets:
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
+        required: true
       registry:
         description: "Docker registry"
         required: true
@@ -69,8 +72,15 @@ jobs:
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
 
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secret.secret-outputs-passphrase }}
+          op: encode
+          in: ${{ steps.build.outputs.image }}
+
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      image: ${{ steps.image.outputs.out }}
       tag: ${{ steps.build.outputs.tag }}
 
   test:
@@ -101,6 +111,13 @@ jobs:
       url: ${{ steps.deploy.outputs.webapp-url }}
     needs: [ context, build, test ]
     steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secret.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ needs.build.outputs.image }}
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -130,7 +147,7 @@ jobs:
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ secrets.registry }}/${{ needs.build.outputs.image }}
+          image: ${{ steps.image.outputs.out }}
           image-tag: ${{ needs.build.outputs.tag }}
           operation: deploy
           debug: false
