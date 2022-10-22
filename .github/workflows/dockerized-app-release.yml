@@ -8,18 +8,15 @@ on:
       repository:
         required: true
         type: string
-      registry:
-        description: "Docker registry"
-        required: false
-        type: string
-        default: registry.hub.docker.com
       version:
         required: true
         type: string
     secrets:
-      docker-login:
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
         required: true
-      docker-password:
+      registry:
+        description: "Docker registry"
         required: true
       github-private-actions-pat:
         required: true
@@ -40,18 +37,23 @@ jobs:
       - name: Login
         uses: docker/login-action@v2
         with:
-          registry: ${{ inputs.registry }}
-          username: ${{ secrets.docker-login }}
-          password: ${{ secrets.docker-password }}
+          registry: ${{ secrets.registry }}
 
       - name: Promote Docker image
         uses: EuphoricSystems/docker-promote-image@1.0.0
         with:
-          src: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:sha-${{ github.sha }}
-          destinations: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:${{ github.event.release.tag_name }}
+          src: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:sha-${{ github.sha }}
+          destinations: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:${{ github.event.release.tag_name }}
+
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: encode
+          in: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}
 
     outputs:
-      image: ${{ inputs.registry }}/${{ inputs.organization }}/${{ inputs.repository }}
+      image: ${{ steps.image.outputs.out }}
       tag: ${{ github.event.release.tag_name }}
 
   deploy_staging:
@@ -61,6 +63,13 @@ jobs:
       url: ${{ steps.deploy.outputs.webapp-url }}
     needs: [ promote ]
     steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ needs.promote.outputs.image }}
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -90,13 +99,9 @@ jobs:
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ needs.promote.outputs.image }}
+          image: ${{ steps.image.outputs.out }}
           image-tag: ${{ needs.promote.outputs.tag }}
           operation: deploy
-        env:
-          ISTIO_INSTALLED: false
-          COLOR: green
-          RELEASE_NAME: example-app-green
 
   deploy_production:
     runs-on: ["self-hosted"]
@@ -105,6 +110,13 @@ jobs:
       url: ${{ steps.deploy.outputs.webapp-url }}
     needs: [ promote, deploy_staging ]
     steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ needs.promote.outputs.image }}
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -134,10 +146,6 @@ jobs:
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ needs.promote.outputs.image }}
+          image: ${{ steps.image.outputs.out }}
           image-tag: ${{ needs.promote.outputs.tag }}
           operation: deploy
-        env:
-          ISTIO_INSTALLED: false
-          COLOR: green
-          RELEASE_NAME: example-app-green

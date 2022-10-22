@@ -151,10 +151,6 @@ jobs:
           image-tag: ${{ needs.build.outputs.tag }}
           operation: deploy
           debug: false
-        env:
-          ISTIO_INSTALLED: false
-          COLOR: green
-          RELEASE_NAME: example-app-green
 
   destroy:
     runs-on: ["self-hosted"]
@@ -214,9 +210,6 @@ jobs:
           image-tag: "<none>"
           operation: destroy
           debug: false
-        env:
-          COLOR: green
-          RELEASE_NAME: example-app-green
 
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0

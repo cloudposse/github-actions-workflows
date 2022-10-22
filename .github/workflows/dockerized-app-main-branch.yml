@@ -8,15 +8,12 @@ on:
       repository:
         required: true
         type: string
+    secrets:
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
+        required: true
       registry:
         description: "Docker registry"
-        required: false
-        type: string
-        default: registry.hub.docker.com
-    secrets:
-      docker-login:
-        required: true
-      docker-password:
         required: true
       github-private-actions-pat:
         required: true
@@ -28,7 +25,6 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
 
 jobs:
   build:
@@ -43,12 +39,17 @@ jobs:
         with:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}
-          registry: ${{ inputs.registry }}
-          login: ${{ secrets.docker-login }}
-          password: ${{ secrets.docker-password }}
+          registry: ${{ secrets.registry }}
+
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: encode
+          in: ${{ steps.build.outputs.image }}
 
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      image: ${{ steps.image.outputs.out }}
       tag: ${{ steps.build.outputs.tag }}
 
   test:
@@ -65,9 +66,7 @@ jobs:
           file: test/docker-compose.yml
           service: app
           command: test/test.sh
-          registry: ${{ inputs.registry }}
-          login: ${{ secrets.docker-login }}
-          password: ${{ secrets.docker-password }}
+          registry: ${{ secrets.registry }}
 
   deploy:
     runs-on: ["self-hosted"]
@@ -76,6 +75,13 @@ jobs:
       url: ${{ steps.deploy.outputs.webapp-url }}
     needs: [ build, test ]
     steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ needs.build.outputs.image }}
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -105,12 +111,9 @@ jobs:
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ needs.build.outputs.image }}
+          image: ${{ steps.image.outputs.out }}
           image-tag: ${{ needs.build.outputs.tag }}
           operation: deploy
-        env:
-          COLOR: green
-          RELEASE_NAME: example-app-green
 
   draft_release:
     name: draft release
