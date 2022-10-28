@@ -29,6 +29,10 @@ on:
         required: true
       spacelift-organization:
         required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
 
 permissions:
   pull-requests: write
