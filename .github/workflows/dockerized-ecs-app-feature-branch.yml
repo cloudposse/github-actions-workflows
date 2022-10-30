@@ -150,7 +150,7 @@ jobs:
         id: deploy
         with:
           stack: ${{ steps.environment.outputs.cluster }}
-          ssm-path: /ecs-service/example-app/service/ecr_image
+          ssm-path: /ecs-service/example-app/service/image
           namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ needs.build.outputs.tag }}
