@@ -8,13 +8,6 @@ on:
       repository:
         required: true
         type: string
-      open:
-        required: true
-        type: boolean
-        default: true
-      ref:
-        required: true
-        type: string
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -41,7 +34,6 @@ concurrency:
 jobs:
   build:
     runs-on: ["self-hosted"]
-    if: ${{ inputs.open }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -67,7 +59,6 @@ jobs:
 
   test:
     runs-on: ["self-hosted"]
-    if: ${{ inputs.open }}
     needs: [ build ]
     steps:
       - name: Checkout
