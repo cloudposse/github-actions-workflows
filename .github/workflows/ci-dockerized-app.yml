@@ -1,0 +1,83 @@
+name: CI - Dockerized Appication
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      open:
+        required: true
+        type: boolean
+        default: true
+      ref:
+        required: true
+        type: string
+    secrets:
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
+        required: true
+      registry:
+        description: "Docker registry"
+        required: true
+    outputs:
+      image:
+        description: "Docker Image"
+        value: ${{ jobs.build.outputs.image }}
+      tag:
+        description: "Docker image tag"
+        value: ${{ jobs.build.outputs.tag }}
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ["self-hosted"]
+    if: ${{ inputs.open }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        id: build
+        uses: cloudposse/github-action-docker-build-push@0.1.0
+        with:
+          organization: ${{ inputs.organization }}
+          repository: ${{ inputs.repository }}
+          registry: ${{ secrets.registry }}
+
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: encode
+          in: ${{ steps.build.outputs.image }}
+
+    outputs:
+      image: ${{ steps.image.outputs.out }}
+      tag: ${{ steps.build.outputs.tag }}
+
+  test:
+    runs-on: ["self-hosted"]
+    if: ${{ inputs.open }}
+    needs: [ build ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Tests
+        id: test
+        uses: cloudposse/github-action-docker-compose-test-run@0.1.1
+        with:
+          file: test/docker-compose.yml
+          service: app
+          command: test/test.sh
+          registry: ${{ secrets.registry }}
