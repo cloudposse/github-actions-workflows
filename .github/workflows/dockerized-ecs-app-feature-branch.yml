@@ -70,8 +70,8 @@ jobs:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
     secrets:
-      registry: "${{ secrets.ECR_REGISTRY }}"
-      secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
+      registry: "${{ secrets.registry }}"
+      secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
 
 #  build:
 #    runs-on: ["self-hosted"]
