@@ -1,0 +1,70 @@
+name: Dockerized Appication - Deploy Production
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
+    secrets:
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
+        required: true
+      registry:
+        description: "Docker registry"
+        required: true
+      github-private-actions-pat:
+        required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
+
+permissions:
+  id-token: write
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ["self-hosted"]
+    permissions:
+      contents: write
+    steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: encode
+          in: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}
+
+    outputs:
+      image: ${{ steps.image.outputs.out }}
+      tag: ${{ github.event.release.tag_name }}
+
+  cd:
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecs.yml@deploy-ecs
+    needs: [ pull ]
+    with:
+      image: ${{ needs.pull.outputs.image }}
+      tag: ${{ needs.pull.outputs.tag }}
+      repository: ${{ inputs.repository }}
+      spacelift-organization: ${{ inputs.spacelift-organization }}
+      environment: production
+    secrets:
+      secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
+      github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
+      spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+      spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
