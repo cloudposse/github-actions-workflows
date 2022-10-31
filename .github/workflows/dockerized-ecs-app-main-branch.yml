@@ -37,7 +37,6 @@ concurrency:
 jobs:
   ci:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app.yml@deploy-ecs
-    if: ${{ inputs.open }}
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
@@ -47,7 +46,7 @@ jobs:
 
   cd:
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecs.yml@deploy-ecs
-    needs: ci
+    needs: [ ci ]
     with:
       image: ${{ needs.ci.outputs.image }}
       tag: ${{ needs.ci.outputs.tag }}
