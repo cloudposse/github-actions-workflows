@@ -21,6 +21,10 @@ on:
         required: true
       github-private-actions-pat:
         required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
 
 permissions:
   contents: write
