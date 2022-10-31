@@ -21,6 +21,11 @@ on:
       ref:
         required: true
         type: string
+      env-label:
+        description: "YAML formatted {environment}: {label} map "
+        required: true
+        default: |
+          preview: deploy
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -41,7 +46,7 @@ permissions:
   contents: read
 
 jobs:
-  context:
+  preview:
     runs-on: ubuntu-latest
     steps:
       - name: Preview deployments controller
@@ -50,8 +55,7 @@ jobs:
         with:
           labels: ${{ inputs.labels }}
           open: ${{ inputs.open }}
-          env-label: |
-            preview: deploy
+          env-label: ${{ inputs.env-label }}
 
     outputs:
       namespace: ${{ inputs.ref }}
@@ -61,14 +65,14 @@ jobs:
 
   deploy:
     runs-on: ["self-hosted"]
-    if: ${{ needs.context.outputs.deploy_envs != '[]'  }}
+    if: ${{ needs.preview.outputs.deploy_envs != '[]'  }}
     strategy:
       matrix:
-        env: ${{ fromJson(needs.context.outputs.deploy_envs) }}
+        env: ${{ fromJson(needs.preview.outputs.deploy_envs) }}
     environment:
       name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ context ]
+    needs: [ preview ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
@@ -103,7 +107,7 @@ jobs:
         id: deploy
         with:
           stack: ${{ steps.environment.outputs.cluster }}
-          ssm-path: /ecs-service/example-app/service/image
+          ssm-path: ${{ steps.environment.outputs.namespace }}
           namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
@@ -117,16 +121,15 @@ jobs:
   destroy:
     runs-on: ["self-hosted"]
     if: false
-    # if: ${{ needs.context.outputs.destroy_envs != '[]'  }}
     strategy:
       matrix:
-        env: ${{ fromJson(needs.context.outputs.destroy_envs) }}
+        env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
     permissions:
       pull-requests: write
       deployments: write
       id-token: write
       contents: read
-    needs: [ context ]
+    needs: [ preview ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -150,7 +153,7 @@ jobs:
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ needs.context.outputs.namespace }}
+          namespace: ${{ needs.preview.outputs.namespace }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
@@ -186,5 +189,5 @@ jobs:
         uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
         if: ${{ ! inputs.open }}
         with:
-          labels_env: ${{ needs.context.outputs.labels_env }}
+          labels_env: ${{ needs.preview.outputs.labels_env }}
           env: ${{ matrix.env }}

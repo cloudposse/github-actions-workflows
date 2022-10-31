@@ -57,48 +57,15 @@ jobs:
       deploy_envs: ${{ steps.controller.outputs.deploy_envs }}
       destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
 
-  build:
-    runs-on: ["self-hosted"]
+  ci:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app.yml@deploy-ecs
     if: ${{ inputs.open }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Build
-        id: build
-        uses: cloudposse/github-action-docker-build-push@0.1.0
-        with:
-          organization: ${{ inputs.organization }}
-          repository: ${{ inputs.repository }}
-          registry: ${{ secrets.registry }}
-
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: encode
-          in: ${{ steps.build.outputs.image }}
-
-    outputs:
-      image: ${{ steps.image.outputs.out }}
-      tag: ${{ steps.build.outputs.tag }}
-
-  test:
-    runs-on: ["self-hosted"]
-    if: ${{ inputs.open }}
-    needs: [ build ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Tests
-        id: test
-        uses: cloudposse/github-action-docker-compose-test-run@0.1.1
-        with:
-          file: test/docker-compose.yml
-          service: app
-          command: test/test.sh
-          registry: ${{ secrets.registry }}
+    with:
+      organization: ${{ inputs.organization }}
+      repository: ${{ inputs.repository }}
+    secrets:
+      registry: "${{ secrets.registry }}"
+      secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
 
   deploy:
     runs-on: ["self-hosted"]
@@ -109,14 +76,14 @@ jobs:
     environment:
       name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ context, build, test ]
+    needs: [ context, ci ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
         with:
           secret: ${{ secrets.secret-outputs-passphrase }}
           op: decode
-          in: ${{ needs.build.outputs.image }}
+          in: ${{ needs.ci.outputs.image }}
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -148,7 +115,7 @@ jobs:
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ needs.build.outputs.tag }}
+          image-tag: ${{ needs.ci.outputs.tag }}
           operation: deploy
           debug: false
 
