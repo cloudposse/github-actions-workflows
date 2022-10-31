@@ -52,7 +52,7 @@ jobs:
 
     outputs:
       image: ${{ steps.image.outputs.out }}
-      tag: ${{ github.event.release.tag_name }}
+      tag: ${{ inputs.version }}
 
   cd:
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecs.yml@deploy-ecs
