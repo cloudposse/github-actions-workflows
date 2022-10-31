@@ -59,7 +59,8 @@ jobs:
 
   cd:
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecs.yml@deploy-ecs
-    needs: ci
+    needs: [ci]
+    if: ${{ success() }}
     with:
       image: ${{ needs.ci.outputs.image }}
       tag: ${{ needs.ci.outputs.tag }}
