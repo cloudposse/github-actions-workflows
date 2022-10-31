@@ -22,8 +22,8 @@ on:
         required: true
         type: string
       env-label:
-        description: "YAML formatted {environment}: {label} map "
-        required: true
+        description: "YAML formatted {environment}: {label} map"
+        type: string
         default: |
           preview: deploy
     secrets:
