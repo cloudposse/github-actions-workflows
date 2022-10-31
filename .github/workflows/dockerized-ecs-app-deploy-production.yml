@@ -39,7 +39,7 @@ concurrency:
 
 jobs:
   pull:
-    runs-on: ["self-hosted"]
+    runs-on: [ubuntu-latest]
     permissions:
       contents: write
     steps:
