@@ -26,13 +26,15 @@ on:
         type: string
         default: |
           preview: deploy
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
         required: true
       github-private-actions-pat:
-        required: true
-      spacelift-organization:
         required: true
       spacelift-api-key-id:
         required: true
@@ -95,28 +97,28 @@ jobs:
           environment: ${{ matrix.env }}
           namespace: ${{ inputs.repository }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-skip-session-tagging: true
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v1.7.0
+          with:
+            aws-region: ${{ steps.environment.outputs.region }}
+            role-to-assume: ${{ steps.environment.outputs.cluster-role }}
+            role-skip-session-tagging: true
 
-      - name: Deploy
-        uses: cloudposse/github-action-deploy-ecs@init
-        id: deploy
-        with:
-          stack: ${{ steps.environment.outputs.cluster }}
-          ssm-path: ${{ steps.environment.outputs.namespace }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ inputs.tag }}
-          operation: deploy
-          debug: false
-          github_token: ${{ secrets.github-private-actions-pat }}
-          organization: ${{ secrets.spacelift-organization }}
-          api_key_id: ${{ secrets.spacelift-api-key-id }}
-          api_key_secret: ${{ secrets.spacelift-api-key-secret }}
+        - name: Deploy
+          uses: cloudposse/github-action-deploy-ecs@init
+          id: deploy
+          with:
+            stack: ${{ steps.environment.outputs.cluster }}
+            ssm-path: ${{ steps.environment.outputs.namespace }}
+            namespace: ${{ steps.environment.outputs.namespace }}
+            image: ${{ steps.image.outputs.out }}
+            image-tag: ${{ inputs.tag }}
+            operation: deploy
+            debug: false
+            github_token: ${{ secrets.github-private-actions-pat }}
+            organization: ${{ inputs.spacelift-organization }}
+            api_key_id: ${{ secrets.spacelift-api-key-id }}
+            api_key_secret: ${{ secrets.spacelift-api-key-secret }}
 
   destroy:
     runs-on: ["self-hosted"]

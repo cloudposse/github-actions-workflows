@@ -18,6 +18,10 @@ on:
       ref:
         required: true
         type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -26,8 +30,6 @@ on:
         description: "Docker registry"
         required: true
       github-private-actions-pat:
-        required: true
-      spacelift-organization:
         required: true
       spacelift-api-key-id:
         required: true
@@ -65,6 +67,7 @@ jobs:
       open: ${{ inputs.open }}
       labels: ${{ inputs.labels }}
       ref: ${{ inputs.ref }}
+      spacelift-organization: "${{ inputs.spacelift-organization }}"
       env-label: |
         qa1: deploy/qa1
         qa2: deploy/qa2
@@ -73,6 +76,5 @@ jobs:
     secrets:
       secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
       github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
-      spacelift-organization: "${{ secrets.spacelift-organization }}"
       spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
       spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
