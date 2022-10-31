@@ -57,24 +57,3 @@ jobs:
       registry: "${{ secrets.registry }}"
       secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
 
-  cd:
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecs.yml@deploy-ecs
-    needs: ci
-    with:
-      image: ${{ needs.ci.outputs.image }}
-      tag: ${{ needs.ci.outputs.tag }}
-      repository: ${{ inputs.repository }}
-      open: ${{ inputs.open }}
-      labels: ${{ inputs.labels }}
-      ref: ${{ inputs.ref }}
-      spacelift-organization: "${{ inputs.spacelift-organization }}"
-      env-label: |
-        qa1: deploy/qa1
-        qa2: deploy/qa2
-        qa3: deploy/qa3
-        qa4: deploy/qa4
-    secrets:
-      secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
-      github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
-      spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
-      spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
