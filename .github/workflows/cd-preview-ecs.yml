@@ -85,3 +85,110 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Environment Info
+        uses: cloudposse/github-action-interface-environment@0.1.0
+        id: environment
+        with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'ecs-environments'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
+          environment: ${{ matrix.env }}
+          namespace: ${{ inputs.repository }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
+          role-skip-session-tagging: true
+
+      - name: Deploy
+        uses: cloudposse/github-action-deploy-ecs@init
+        id: deploy
+        with:
+          stack: ${{ steps.environment.outputs.cluster }}
+          ssm-path: ${{ steps.environment.outputs.namespace }}
+          namespace: ${{ steps.environment.outputs.namespace }}
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          operation: deploy
+          debug: false
+          github_token: ${{ secrets.github-private-actions-pat }}
+          organization: ${{ inputs.spacelift-organization }}
+          api_key_id: ${{ secrets.spacelift-api-key-id }}
+          api_key_secret: ${{ secrets.spacelift-api-key-secret }}
+
+  destroy:
+    runs-on: ["self-hosted"]
+    if: false
+    strategy:
+      matrix:
+        env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
+    permissions:
+      pull-requests: write
+      deployments: write
+      id-token: write
+      contents: read
+    needs: [ preview ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Seek deployment
+        uses: cloudposse/github-action-seek-deployment@0.1.0
+        id: deployment
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ matrix.env }}
+          ref: ${{ inputs.ref }}
+          status: success
+
+      - name: Environment Info
+        uses: cloudposse/github-action-interface-environment@0.1.0
+        if: ${{ steps.deployment.outputs.id != '' }}
+        id: environment
+        with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'environments'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
+          environment: ${{ matrix.env }}
+          namespace: ${{ needs.preview.outputs.namespace }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        if: ${{ steps.deployment.outputs.id != '' }}
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
+          role-skip-session-tagging: true
+
+      - name: Destroy
+        uses: cloudposse/github-action-deploy-helmfile@0.1.0
+        if: ${{ steps.deployment.outputs.id != '' }}
+        id: deploy
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          cluster: ${{ steps.environment.outputs.cluster }}
+          environment: ${{ steps.environment.outputs.name }}
+          namespace: ${{ steps.environment.outputs.namespace }}
+          image: "<none>"
+          image-tag: "<none>"
+          operation: destroy
+          debug: false
+
+      - name: Inactivate deployment
+        uses: chrnorm/deployment-status@v2.0.0
+        if: ${{ steps.deployment.outputs.id != '' }}
+        with:
+          state: inactive
+          token: ${{ github.token }}
+          deployment-id: ${{ steps.deployment.outputs.id }}
+
+      - name: Cleanup label
+        uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
+        if: ${{ ! inputs.open }}
+        with:
+          labels_env: ${{ needs.preview.outputs.labels_env }}
+          env: ${{ matrix.env }}
