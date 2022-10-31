@@ -121,7 +121,6 @@ jobs:
 
   destroy:
     runs-on: ubuntu-latest
-    if: false
     strategy:
       matrix:
         env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
@@ -143,40 +142,6 @@ jobs:
           environment: ${{ matrix.env }}
           ref: ${{ inputs.ref }}
           status: success
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.1.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: ${{ matrix.env }}
-          namespace: ${{ needs.preview.outputs.namespace }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-skip-session-tagging: true
-
-      - name: Destroy
-        uses: cloudposse/github-action-deploy-helmfile@0.1.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        id: deploy
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: "<none>"
-          image-tag: "<none>"
-          operation: destroy
-          debug: false
 
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0
