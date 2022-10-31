@@ -11,6 +11,10 @@ on:
       version:
         required: true
         type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -19,6 +23,10 @@ on:
         description: "Docker registry"
         required: true
       github-private-actions-pat:
+        required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
         required: true
 
 permissions:
