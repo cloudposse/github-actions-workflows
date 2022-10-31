@@ -11,16 +11,6 @@ on:
       repository:
         required: true
         type: string
-      open:
-        required: true
-        type: boolean
-        default: true
-      labels:
-        required: true
-        type: string
-      ref:
-        required: true
-        type: string
       environment:
         description: "Environment name"
         type: string
@@ -41,8 +31,6 @@ on:
         required: true
 
 permissions:
-  pull-requests: write
-  deployments: write
   id-token: write
   contents: read
 
@@ -50,7 +38,7 @@ jobs:
   deploy:
     runs-on: ["self-hosted"]
     environment:
-      name: dev
+      name: ${{ inputs.environment }}
       url: ${{ steps.deploy.outputs.webapp-url }}
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
