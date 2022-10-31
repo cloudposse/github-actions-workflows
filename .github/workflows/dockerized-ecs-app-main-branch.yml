@@ -8,6 +8,10 @@ on:
       repository:
         required: true
         type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
