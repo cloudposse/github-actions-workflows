@@ -29,7 +29,8 @@ permissions:
 
 jobs:
   build:
-    runs-on: ["self-hosted"]
+    runs-on:
+      group: default
     steps:
       - name: Checkout
         uses: actions/checkout@v3
