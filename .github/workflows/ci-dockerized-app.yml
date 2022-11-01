@@ -55,7 +55,8 @@ jobs:
       tag: ${{ steps.build.outputs.tag }}
 
   test:
-    runs-on: ["self-hosted"]
+    runs-on:
+      group: default
     needs: [ build ]
     steps:
       - name: Checkout
