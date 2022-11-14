@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           TEST_FILES=$(find ./.github/workflows -type f -name "${{ inputs.tests-prefix }}" -exec basename {} \; | jq -MRc -s '. | split("\n") | map(select(. != ""))')
-          echo "::set-output name=list::${TEST_FILES}"
+          echo "list::${TEST_FILES}" >> $GITHUB_OUTPUT
 
     outputs:
       tests: ${{ steps.workflows.outputs.list }}
