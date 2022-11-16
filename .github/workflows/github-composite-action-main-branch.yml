@@ -64,7 +64,7 @@ jobs:
         env: ${{ fromJson(needs.context.outputs.tests) }}
     needs: [ lint, context ]
     steps:
-      - uses: convictional/trigger-workflow-and-wait@v1.6.1
+      - uses: convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: ${{ inputs.organization }}
           repo: ${{ inputs.repository }}
