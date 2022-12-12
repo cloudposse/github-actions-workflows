@@ -34,6 +34,7 @@ concurrency:
 
 jobs:
   ci:
+    name: ci
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
     with:
       organization: ${{ inputs.organization }}
@@ -45,6 +46,7 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   cd:
+    name: cd
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
     needs: [ ci ]
     with:
@@ -56,20 +58,9 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
 
-  draft_release:
+  release:
     name: draft release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    uses:  cloudposse/github-actions-workflows/.github/workflows/controller-draft-release.yml@main
     needs: [ cd ]
-    steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - name: Create/Update Draft release
-        uses: release-drafter/release-drafter@v5
-        with:
-          publish: false
-          prerelease: false
-          config-name: configs/draft-release.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+    secrets:
+      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
