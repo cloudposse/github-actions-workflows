@@ -63,7 +63,7 @@ jobs:
           in: ${{ steps.build.outputs.image }}
 
     outputs:
-      image: ${{ fromJson(steps.outputs.outputs.result).image }}
+      image: ${{ steps.image.outputs.out }}
       tag: ${{ steps.build.outputs.tag }}
 
   test:
