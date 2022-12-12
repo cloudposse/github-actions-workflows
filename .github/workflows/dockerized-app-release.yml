@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   promote:
-    runs-on: ["self-hosted"]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -57,7 +57,7 @@ jobs:
       tag: ${{ github.event.release.tag_name }}
 
   deploy_staging:
-    runs-on: ["self-hosted"]
+    runs-on: ubuntu-latest
     environment:
       name: staging
       url: ${{ steps.deploy.outputs.webapp-url }}
@@ -104,7 +104,7 @@ jobs:
           operation: deploy
 
   deploy_production:
-    runs-on: ["self-hosted"]
+    runs-on: ubuntu-latest
     environment:
       name: production
       url: ${{ steps.deploy.outputs.webapp-url }}
