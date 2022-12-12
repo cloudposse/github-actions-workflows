@@ -44,52 +44,17 @@ jobs:
       registry: ${{ secrets.registry }}
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
-  deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: dev
-      url: ${{ steps.deploy.outputs.webapp-url }}
+  cd:
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
     needs: [ ci ]
-    steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: decode
-          in: ${{ needs.ci.outputs.image }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.1.0
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments/'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: dev
-          namespace: dev
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-skip-session-tagging: true
-
-      - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.0
-        id: deploy
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ needs.ci.outputs.tag }}
-          operation: deploy
+    with:
+      image: ${{ needs.ci.outputs.image }}
+      tag: ${{ needs.ci.outputs.tag }}
+      repository: ${{ inputs.repository }}
+      environment: dev
+    secrets:
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
 
   draft_release:
     name: draft release
