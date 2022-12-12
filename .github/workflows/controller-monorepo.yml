@@ -1,0 +1,35 @@
+name: Monorepo Controller
+on:
+  workflow_call:
+    inputs:
+      dir:
+        required: true
+        type: string
+    outputs:
+      apps:
+        description: "Applications"
+        value: ${{ jobs.monorepo.outputs.apps }}
+      changes:
+        description: "Changed applications"
+        value: ${{ jobs.monorepo.outputs.changes }}
+      no-changes:
+        description: "Unchanged applications"
+        value: ${{ jobs.monorepo.outputs.no-changes }}
+
+jobs:
+  monorepo:
+    runs-on: [ "self-hosted" ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Monorepo controller
+        id: controller
+        uses: cloudposse/github-action-monorepo-random-controller@0.1.1
+        with:
+          dir: ${{ inputs.dir }}
+
+    outputs:
+      apps: ${{ steps.controller.outputs.apps }}
+      changes: ${{ steps.controller.outputs.changes }}
+      no-changes: ${{ steps.controller.outputs.no-changes }}

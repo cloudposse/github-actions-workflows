@@ -20,6 +20,12 @@ on:
         required: true
       github-private-actions-pat:
         required: true
+      ecr-region:
+        required: true
+        description: "AWS region for ECR"
+      ecr-iam-role:
+        required: true
+        description: "IAM for ECR"
 
 permissions:
   contents: write
@@ -34,6 +40,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ secrets.ecr-region }}
+          role-to-assume: ${{ secrets.ecr-iam-role }}
+
       - name: Login
         uses: docker/login-action@v2
         with:

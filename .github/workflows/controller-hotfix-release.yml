@@ -1,0 +1,51 @@
+name: Create hotfix release
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+    outputs:
+      version:
+        description: Release version
+        value: ${{ jobs.create.outputs.version }}
+jobs:
+  create:
+    runs-on: ["self-hosted"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Get Previous tag
+        id: previoustag
+        shell: sh
+        run: |
+          git fetch --tags --force
+          git describe --always --tags --abbrev=0 ${{ inputs.ref }}
+          ## Return a prev tag that points to any commit prev to the current.
+          ## If no tag - return SHA
+          ANY_VERSION=$(git describe --always --tags --abbrev=0 ${{ inputs.ref }})
+          ## Get latest tag pointing to the specific commit
+          ## If no tag - return SHA
+          VERSION=$( ( echo ${ANY_VERSION} && git tag --points-at ${ANY_VERSION} ) | tail -1 )
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Get next minor version
+        id: semvers
+        uses: "WyriHaximus/github-action-next-semvers@v1"
+        with:
+          version: ${{ steps.previoustag.outputs.version }}
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.semvers.outputs.patch }}
+          commit: ${{ inputs.ref }}
+          generateReleaseNotes: true
+          token: ${{ github.token }}
+
+    outputs:
+      version: ${{ steps.semvers.outputs.patch }}

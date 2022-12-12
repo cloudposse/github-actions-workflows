@@ -1,0 +1,32 @@
+name: Reingtegrate release branch
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      target_branch:
+        required: true
+        type: string
+        default: main
+    secrets:
+      github-private-actions-pat:
+        required: true
+jobs:
+  changes:
+    runs-on: ["self-hosted"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+
+      - name: Create reingtegration PR
+        uses: devops-infra/action-pull-request@v0.4.2
+        with:
+          github_token: ${{ secrets.github-private-actions-pat }}
+          target_branch: ${{ inputs.target_branch }}
+          title: Reintegrate ${{ inputs.ref }} hotfix into main branch
+          template: .github/REINTEGRATE_PULL_REQUEST_TEMPLATE.md
+          get_diff: true

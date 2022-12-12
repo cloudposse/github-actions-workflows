@@ -1,0 +1,68 @@
+name: CI - Dockerized Appication Promote
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      app:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+    secrets:
+      ecr-iam-role:
+        description: "ECR IAM role arn"
+        required: true
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
+        required: true
+      registry:
+        description: "Docker registry"
+        required: true
+    outputs:
+      image:
+        description: "Docker Image"
+        value: ${{ jobs.promote.outputs.image }}
+      tag:
+        description: "Docker image tag"
+        value: ${{ jobs.promote.outputs.tag }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  promote:
+    runs-on: ["self-hosted"]
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.ecr-iam-role }}
+
+      - uses: cloudposse/github-action-docker-promote@0.1.0
+        id: promote
+        with:
+          registry: ${{ secrets.registry }}
+          organization: ${{ inputs.organization }}
+          repository: ${{ inputs.repository }}/${{ inputs.app }}
+          from: sha-${{ github.sha }}
+          to: ${{ inputs.version }}
+          use_metadata: false
+
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: encode
+          in: ${{ steps.promote.outputs.image }}
+
+    outputs:
+      image: ${{ steps.image.outputs.out }}
+      tag: ${{ steps.promote.outputs.tag }}

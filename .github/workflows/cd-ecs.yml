@@ -1,0 +1,130 @@
+name: CD ECS
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+      app:
+        required: true
+        type: string
+      environment:
+        description: "Environment name"
+        type: string
+        required: true
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
+      matrix-step-name:
+        required: false
+        type: string
+      matrix-key:
+        required: false
+        type: string
+    secrets:
+      secret-outputs-passphrase:
+        description: "Passphrase for secret outputs"
+        required: true
+      github-private-actions-pat:
+        required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  multiregion-controller:
+    runs-on: ["self-hosted"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Validate  deploy.yaml
+        uses: cardinalby/schema-validator-action@v1
+        with:
+          file: ./apps/${{ inputs.app }}/deploy.yaml
+          schema: ./.github/configs/deploy.schema.json
+
+      - name: Read deploy.yaml
+        id: file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./apps/${{ inputs.app }}/deploy.yaml
+
+      - uses: cloudposse/github-action-yaml-config-query@0.1.0
+        id: deploy
+        with:
+          query: .
+          config: ${{ steps.file.outputs.content }}
+
+    outputs:
+      regions: ${{ steps.deploy.outputs.regions }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: ["multiregion-controller"]
+    strategy:
+      matrix:
+        region: ${{ fromJson(needs.multiregion-controller.outputs.regions) }}
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ inputs.image }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Environment Info
+        uses: cloudposse/github-action-interface-environment@0.2.0
+        id: environment
+        with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'ecs-environments'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
+          environment: ${{ inputs.environment }}
+          namespace: ${{ inputs.environment }}
+          repository: ${{ inputs.repository }}
+          application: ${{ inputs.app }}
+          attributes: ${{ matrix.region }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-skip-session-tagging: true
+
+      - name: Deploy
+        uses: cloudposse/github-action-deploy-ecs@0.1.0
+        id: deploy
+        with:
+          stack: ${{ steps.environment.outputs.cluster }}
+          region: ${{ steps.environment.outputs.region }}
+          ssm-path: ${{ steps.environment.outputs.ssm-path }}
+          namespace: ${{ steps.environment.outputs.namespace }}
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          operation: deploy
+          debug: false
+          github_token: ${{ secrets.github-private-actions-pat }}
+          organization: ${{ inputs.spacelift-organization }}
+          api_key_id: ${{ secrets.spacelift-api-key-id }}
+          api_key_secret: ${{ secrets.spacelift-api-key-secret }}
