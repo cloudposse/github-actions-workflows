@@ -33,6 +33,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  ci:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
+    with:
+      organization: ${{ inputs.organization }}
+      repository: ${{ inputs.repository }}
+    secrets:
+      ecr-region: ${{ secrets.ecr-region }}
+      ecr-iam-role: ${{ secrets.ecr-iam-role }}
+      registry: ${{ secrets.registry }}
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -91,14 +102,14 @@ jobs:
     environment:
       name: dev
       url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ build, test ]
+    needs: [ build, test, ci ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
         with:
           secret: ${{ secrets.secret-outputs-passphrase }}
           op: decode
-          in: ${{ needs.build.outputs.image }}
+          in: ${{ needs.ci.outputs.image }}
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -130,7 +141,7 @@ jobs:
           environment: ${{ steps.environment.outputs.name }}
           namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ needs.build.outputs.tag }}
+          image-tag: ${{ needs.ci.outputs.tag }}
           operation: deploy
 
   draft_release:
