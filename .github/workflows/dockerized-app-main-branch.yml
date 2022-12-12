@@ -34,7 +34,6 @@ concurrency:
 
 jobs:
   ci:
-    name: ci
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
     with:
       organization: ${{ inputs.organization }}
@@ -46,7 +45,6 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   cd:
-    name: cd
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
     needs: [ ci ]
     with:
@@ -59,7 +57,6 @@ jobs:
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
 
   release:
-    name: draft release
     uses:  cloudposse/github-actions-workflows/.github/workflows/controller-draft-release.yml@main
     needs: [ cd ]
     secrets:
