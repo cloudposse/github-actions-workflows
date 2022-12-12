@@ -63,60 +63,16 @@ jobs:
       deploy_envs: ${{ steps.controller.outputs.deploy_envs }}
       destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
 
-  build:
-    runs-on: ubuntu-latest
-    if: ${{ inputs.open }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ secrets.ecr-region }}
-          role-to-assume: ${{ secrets.ecr-iam-role }}
-
-      - name: Build
-        id: build
-        uses: cloudposse/github-action-docker-build-push@0.1.0
-        with:
-          organization: ${{ inputs.organization }}
-          repository: ${{ inputs.repository }}
-          registry: ${{ secrets.registry }}
-
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: encode
-          in: ${{ steps.build.outputs.image }}
-
-    outputs:
-      image: ${{ steps.image.outputs.out }}
-      tag: ${{ steps.build.outputs.tag }}
-
-  test:
-    runs-on: ubuntu-latest
-    if: ${{ inputs.open }}
-    needs: [ build ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ secrets.ecr-region }}
-          role-to-assume: ${{ secrets.ecr-iam-role }}
-
-      - name: Tests
-        id: test
-        uses: cloudposse/github-action-docker-compose-test-run@0.1.1
-        with:
-          file: test/docker-compose.yml
-          service: app
-          command: test/test.sh
-          registry: ${{ secrets.registry }}
+  ci:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
+    with:
+      organization: ${{ inputs.organization }}
+      repository: ${{ inputs.repository }}
+    secrets:
+      ecr-region: ${{ secrets.ecr-region }}
+      ecr-iam-role: ${{ secrets.ecr-iam-role }}
+      registry: ${{ secrets.registry }}
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -127,7 +83,7 @@ jobs:
     environment:
       name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ context, build, test ]
+    needs: [ context, ci ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
