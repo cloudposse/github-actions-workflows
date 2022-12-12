@@ -148,7 +148,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create reingtegration PR
-        uses: devops-infra/action-pull-request@v0.4.2
+        uses: devops-infra/action-pull-request@v0.5.3
         with:
           github_token: ${{ secrets.github-pat }}
           target_branch: ${{ inputs.default_branch }}
