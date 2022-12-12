@@ -46,7 +46,7 @@ jobs:
           aws-region: us-west-2
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
-      - uses: cloudposse/github-action-docker-image-exists@0.1.0
+      - uses: cloudposse/github-action-docker-image-exists@0.1.1
         id: pull
         with:
           organization: ${{ inputs.organization }}
