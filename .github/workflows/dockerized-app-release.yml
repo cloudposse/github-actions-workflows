@@ -49,7 +49,7 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   staging:
-    name: cd/staging
+    name: cd / staging
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
     needs: [ ci ]
     with:
@@ -62,7 +62,7 @@ jobs:
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
 
   production:
-    name: cd/production
+    name: cd / production
     uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
     needs: [ ci, staging ]
     with:
