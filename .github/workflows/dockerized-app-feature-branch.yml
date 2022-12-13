@@ -45,24 +45,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  context:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Preview deployments controller
-        uses: cloudposse/github-action-preview-environment-controller@v0.7.0
-        id: controller
-        with:
-          labels: ${{ inputs.labels }}
-          open: ${{ inputs.open }}
-          env-label: |
-            preview: deploy
-
-    outputs:
-      namespace: ${{ inputs.ref }}
-      labels_env: ${{ steps.controller.outputs.labels_env }}
-      deploy_envs: ${{ steps.controller.outputs.deploy_envs }}
-      destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
-
   ci:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
     with:
@@ -74,128 +56,20 @@ jobs:
       registry: ${{ secrets.registry }}
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
-  deploy:
-    runs-on: ubuntu-latest
-    if: ${{ needs.context.outputs.deploy_envs != '[]'  }}
-    strategy:
-      matrix:
-        env: ${{ fromJson(needs.context.outputs.deploy_envs) }}
-    environment:
-      name: ${{ matrix.env }}
-      url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ context, ci ]
-    steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: decode
-          in: ${{ needs.build.outputs.image }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.1.0
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: ${{ matrix.env }}
-          namespace: ${{ needs.context.outputs.namespace }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-skip-session-tagging: true
-
-      - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.0
-        id: deploy
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ needs.build.outputs.tag }}
-          operation: deploy
-          debug: false
-
-  destroy:
-    runs-on: ubuntu-latest
-    if: ${{ needs.context.outputs.destroy_envs != '[]'  }}
-    strategy:
-      matrix:
-        env: ${{ fromJson(needs.context.outputs.destroy_envs) }}
-    permissions:
-      pull-requests: write
-      deployments: write
-      id-token: write
-      contents: read
-    needs: [ context ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Seek deployment
-        uses: cloudposse/github-action-seek-deployment@0.1.0
-        id: deployment
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          environment: ${{ matrix.env }}
-          ref: ${{ inputs.ref }}
-          status: success
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.1.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: ${{ matrix.env }}
-          namespace: ${{ needs.context.outputs.namespace }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-skip-session-tagging: true
-
-      - name: Destroy
-        uses: cloudposse/github-action-deploy-helmfile@0.1.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        id: deploy
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: "<none>"
-          image-tag: "<none>"
-          operation: destroy
-          debug: false
-
-      - name: Inactivate deployment
-        uses: chrnorm/deployment-status@v2.0.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        with:
-          state: inactive
-          token: ${{ github.token }}
-          deployment-id: ${{ steps.deployment.outputs.id }}
-
-      - name: Cleanup label
-        uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
-        if: ${{ ! inputs.open }}
-        with:
-          labels_env: ${{ needs.context.outputs.labels_env }}
-          env: ${{ matrix.env }}
+  cd:
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-helmfile.yml@main
+    needs: [ ci ]
+    if: ${{ always() }}
+    with:
+      image: ${{ needs.ci.outputs.image }}
+      tag: ${{ needs.ci.outputs.tag }}
+      repository: ${{ inputs.repository }}
+      open: ${{ inputs.open }}
+      labels: ${{ inputs.labels }}
+      ref: ${{ inputs.ref }}
+      exclusive: false
+      env-label: |
+        preview: deploy
+    secrets:
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
