@@ -11,9 +11,6 @@ on:
       repository:
         required: true
         type: string
-      app:
-        required: true
-        type: string
       open:
         required: true
         type: boolean
@@ -32,19 +29,11 @@ on:
         type: string
         default: |
           preview: deploy
-      spacelift-organization:
-        description: "Spacelift organization"
-        type: string
-        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
         required: true
       github-private-actions-pat:
-        required: true
-      spacelift-api-key-id:
-        required: true
-      spacelift-api-key-secret:
         required: true
 
 permissions:
