@@ -124,7 +124,7 @@ jobs:
 
       - name: Deploy
         id: deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.1.0
+        uses: cloudposse/github-action-deploy-helmfile@0.2.1
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           base-role: ${{ steps.environment.outputs.role }}
