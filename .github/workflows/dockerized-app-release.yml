@@ -12,6 +12,12 @@ on:
         required: true
         type: string
     secrets:
+      ecr-region:
+        required: true
+        description: "AWS region for ECR"
+      ecr-iam-role:
+        required: true
+        description: "IAM for ECR"
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
         required: true
@@ -20,12 +26,6 @@ on:
         required: true
       github-private-actions-pat:
         required: true
-      ecr-region:
-        required: true
-        description: "AWS region for ECR"
-      ecr-iam-role:
-        required: true
-        description: "IAM for ECR"
 
 permissions:
   contents: write
@@ -35,129 +35,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  promote:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ secrets.ecr-region }}
-          role-to-assume: ${{ secrets.ecr-iam-role }}
+  ci:
+    uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-promote.yml@main
+    with:
+      organization: ${{ inputs.organization }}
+      repository: ${{ inputs.repository }}
+      version: ${{ inputs.version }}
+    secrets:
+      ecr-region: ${{ secrets.ecr-region }}
+      ecr-iam-role: ${{ secrets.ecr-iam-role }}
+      registry: ${{ secrets.registry }}
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
-      - name: Login
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.registry }}
+  staging:
+    name: cd/staging
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
+    needs: [ ci ]
+    with:
+      image: ${{ needs.ci.outputs.image }}
+      tag: ${{ needs.ci.outputs.tag }}
+      repository: ${{ inputs.repository }}
+      environment: staging
+    secrets:
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
 
-      - name: Promote Docker image
-        uses: EuphoricSystems/docker-promote-image@1.0.0
-        with:
-          src: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:sha-${{ github.sha }}
-          destinations: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}:${{ github.event.release.tag_name }}
-
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: encode
-          in: ${{ secrets.registry }}/${{ inputs.organization }}/${{ inputs.repository }}
-
-    outputs:
-      image: ${{ steps.image.outputs.out }}
-      tag: ${{ github.event.release.tag_name }}
-
-  deploy_staging:
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ promote ]
-    steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: decode
-          in: ${{ needs.promote.outputs.image }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.1.0
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments/'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: staging
-          namespace: staging
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-session-name: deploy
-
-      - name: Deploy
-        id: deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ needs.promote.outputs.tag }}
-          operation: deploy
-
-  deploy_production:
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.webapp-url }}
-    needs: [ promote, deploy_staging ]
-    steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
-        id: image
-        with:
-          secret: ${{ secrets.secret-outputs-passphrase }}
-          op: decode
-          in: ${{ needs.promote.outputs.image }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.1.0
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments/'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: production
-          namespace: production
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
-          role-session-name: deploy
-
-      - name: Deploy
-        id: deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.0
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: ${{ steps.image.outputs.out }}
-          image-tag: ${{ needs.promote.outputs.tag }}
-          operation: deploy
+  production:
+    name: cd/production
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
+    needs: [ ci, staging ]
+    with:
+      image: ${{ needs.ci.outputs.image }}
+      tag: ${{ needs.ci.outputs.tag }}
+      repository: ${{ inputs.repository }}
+      environment: production
+    secrets:
+      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}

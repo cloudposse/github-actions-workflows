@@ -8,13 +8,13 @@ on:
       repository:
         required: true
         type: string
-      app:
-        required: true
-        type: string
       version:
         required: true
         type: string
     secrets:
+      ecr-region:
+        required: true
+        description: "AWS region for ECR"
       ecr-iam-role:
         description: "ECR IAM role arn"
         required: true
@@ -38,12 +38,12 @@ permissions:
 
 jobs:
   promote:
-    runs-on: ["self-hosted"]
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          aws-region: us-west-2
+          aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
       - uses: cloudposse/github-action-docker-promote@0.1.0
