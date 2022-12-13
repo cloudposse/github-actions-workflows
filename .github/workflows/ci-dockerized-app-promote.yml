@@ -51,7 +51,7 @@ jobs:
         with:
           registry: ${{ secrets.registry }}
           organization: ${{ inputs.organization }}
-          repository: ${{ inputs.repository }}/${{ inputs.app }}
+          repository: ${{ inputs.repository }}
           from: sha-${{ github.sha }}
           to: ${{ inputs.version }}
           use_metadata: false
