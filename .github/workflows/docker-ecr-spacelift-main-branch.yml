@@ -23,6 +23,14 @@ on:
       ecr-iam-role:
         required: true
         description: "IAM for ECR"
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
 
 permissions:
   contents: write
@@ -45,16 +53,19 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   cd:
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
+    uses: vstreaminc/github-action-workflows/.github/workflows/cd-ecs.yml@main
     needs: [ ci ]
     with:
       image: ${{ needs.ci.outputs.image }}
       tag: ${{ needs.ci.outputs.tag }}
       repository: ${{ inputs.repository }}
+      spacelift-organization: ${{ inputs.spacelift-organization }}
       environment: dev
     secrets:
-      secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-      github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
+      github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
+      spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+      spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
 
   release:
     uses:  cloudposse/github-actions-workflows/.github/workflows/controller-draft-release.yml@main

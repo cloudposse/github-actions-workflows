@@ -11,9 +11,6 @@ on:
       repository:
         required: true
         type: string
-      app:
-        required: true
-        type: string
       environment:
         description: "Environment name"
         type: string
@@ -22,12 +19,6 @@ on:
         description: "Spacelift organization"
         type: string
         required: true
-      matrix-step-name:
-        required: false
-        type: string
-      matrix-key:
-        required: false
-        type: string
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -44,39 +35,8 @@ permissions:
   contents: read
 
 jobs:
-  multiregion-controller:
-    runs-on: ["self-hosted"]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Validate  deploy.yaml
-        uses: cardinalby/schema-validator-action@v1
-        with:
-          file: ./apps/${{ inputs.app }}/deploy.yaml
-          schema: ./.github/configs/deploy.schema.json
-
-      - name: Read deploy.yaml
-        id: file
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: ./apps/${{ inputs.app }}/deploy.yaml
-
-      - uses: cloudposse/github-action-yaml-config-query@0.1.0
-        id: deploy
-        with:
-          query: .
-          config: ${{ steps.file.outputs.content }}
-
-    outputs:
-      regions: ${{ steps.deploy.outputs.regions }}
-
   deploy:
     runs-on: ubuntu-latest
-    needs: ["multiregion-controller"]
-    strategy:
-      matrix:
-        region: ${{ fromJson(needs.multiregion-controller.outputs.regions) }}
     environment:
       name: ${{ inputs.environment }}
       url: ${{ steps.deploy.outputs.webapp-url }}
@@ -102,8 +62,6 @@ jobs:
           environment: ${{ inputs.environment }}
           namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
-          application: ${{ inputs.app }}
-          attributes: ${{ matrix.region }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
