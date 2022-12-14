@@ -82,6 +82,6 @@ jobs:
           operation: deploy
           debug: false
           github_token: ${{ secrets.github-private-actions-pat }}
-          organization: ${{ inputs.spacelift-organization }}
+          organization: ${{ secrets.spacelift-organization }}
           api_key_id: ${{ secrets.spacelift-api-key-id }}
           api_key_secret: ${{ secrets.spacelift-api-key-secret }}
