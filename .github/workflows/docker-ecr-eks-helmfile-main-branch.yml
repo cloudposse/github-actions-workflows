@@ -23,6 +23,13 @@ on:
       ecr-iam-role:
         required: true
         description: "IAM for ECR"
+      spacelift-organization:
+        description: "Spacelift organization"
+        required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
 
 permissions:
   contents: write

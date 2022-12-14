@@ -26,6 +26,13 @@ on:
         required: true
       github-private-actions-pat:
         required: true
+      spacelift-organization:
+        description: "Spacelift organization"
+        required: true
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
 
 permissions:
   id-token: write
