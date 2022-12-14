@@ -52,7 +52,7 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   cd:
-    uses: vstreaminc/github-action-workflows/.github/workflows/cd-ecs.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecs.yml@main
     needs: [ ci ]
     with:
       image: ${{ needs.ci.outputs.image }}
