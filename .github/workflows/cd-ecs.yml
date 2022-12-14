@@ -15,15 +15,14 @@ on:
         description: "Environment name"
         type: string
         required: true
-      spacelift-organization:
-        description: "Spacelift organization"
-        type: string
-        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
         required: true
       github-private-actions-pat:
+        required: true
+      spacelift-organization:
+        description: "Spacelift organization"
         required: true
       spacelift-api-key-id:
         required: true
