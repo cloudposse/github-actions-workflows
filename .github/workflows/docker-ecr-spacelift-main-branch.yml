@@ -25,7 +25,6 @@ on:
         description: "IAM for ECR"
       spacelift-organization:
         description: "Spacelift organization"
-        type: string
         required: true
       spacelift-api-key-id:
         required: true
