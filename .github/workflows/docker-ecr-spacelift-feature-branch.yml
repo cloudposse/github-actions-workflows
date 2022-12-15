@@ -37,6 +37,10 @@ on:
       ecr-iam-role:
         required: true
         description: "IAM for ECR"
+      spacelift-api-key-id:
+        required: true
+      spacelift-api-key-secret:
+        required: true
 
 permissions:
   pull-requests: write
