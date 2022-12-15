@@ -11,6 +11,10 @@ on:
       version:
         required: true
         type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       ecr-region:
         required: true
@@ -25,9 +29,6 @@ on:
         description: "Docker registry"
         required: true
       github-private-actions-pat:
-        required: true
-      spacelift-organization:
-        description: "Spacelift organization"
         required: true
       spacelift-api-key-id:
         required: true

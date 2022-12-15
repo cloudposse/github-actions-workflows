@@ -59,8 +59,8 @@ jobs:
       tag: ${{ needs.ci.outputs.tag }}
       repository: ${{ inputs.repository }}
       environment: dev
+      spacelift-organization: ${{ inputs.spacelift-organization }}
     secrets:
-      spacelift-organization: ${{ secrets.spacelift-organization }}
       secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
       github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
       spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
