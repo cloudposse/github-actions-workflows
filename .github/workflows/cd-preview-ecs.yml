@@ -52,7 +52,7 @@ permissions:
 
 jobs:
   preview:
-    runs-on: ["self-hosted"]
+    runs-on: ubuntu-latest
     steps:
       - name: Preview deployments controller
         uses: cloudposse/github-action-preview-environment-controller@0.8.0
