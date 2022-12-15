@@ -65,12 +65,13 @@ jobs:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
 
   cd:
-    uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-helmfile.yml@main
+    uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecs.yml@main
     needs: [ ci ]
     if: ${{ always() }}
     with:
       image: ${{ needs.ci.outputs.image }}
       tag: ${{ needs.ci.outputs.tag }}
+      spacelift-organization: ${{ inputs.spacelift-organization }}
       repository: ${{ inputs.repository }}
       open: ${{ inputs.open }}
       labels: ${{ inputs.labels }}
@@ -84,3 +85,5 @@ jobs:
     secrets:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+      spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"

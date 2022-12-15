@@ -34,7 +34,7 @@ on:
         required: true
       spacelift-api-key-secret:
         required: true
-        
+
 permissions:
   id-token: write
   contents: write
@@ -65,9 +65,12 @@ jobs:
       tag: ${{ needs.ci.outputs.tag }}
       repository: ${{ inputs.repository }}
       environment: staging
+      spacelift-organization: ${{ inputs.spacelift-organization }}
     secrets:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+      spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
 
   cd-production:
     name: cd / production
@@ -78,6 +81,9 @@ jobs:
       tag: ${{ needs.ci.outputs.tag }}
       repository: ${{ inputs.repository }}
       environment: production
+      spacelift-organization: ${{ inputs.spacelift-organization }}
     secrets:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+      spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+      spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
