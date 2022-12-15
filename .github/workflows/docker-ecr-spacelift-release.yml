@@ -11,6 +11,10 @@ on:
       version:
         required: true
         type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       ecr-region:
         required: true

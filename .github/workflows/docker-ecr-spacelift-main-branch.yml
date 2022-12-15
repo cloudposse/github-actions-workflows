@@ -8,6 +8,10 @@ on:
       repository:
         required: true
         type: string
+      spacelift-organization:
+        description: "Spacelift organization"
+        type: string
+        required: true
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -23,9 +27,6 @@ on:
       ecr-iam-role:
         required: true
         description: "IAM for ECR"
-      spacelift-organization:
-        description: "Spacelift organization"
-        required: true
       spacelift-api-key-id:
         required: true
       spacelift-api-key-secret:
