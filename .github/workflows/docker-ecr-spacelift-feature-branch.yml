@@ -71,9 +71,12 @@ jobs:
       open: ${{ inputs.open }}
       labels: ${{ inputs.labels }}
       ref: ${{ inputs.ref }}
-      exclusive: false
+      exclusive: true
       env-label: |
-        preview: deploy
+        qa1: deploy/qa1
+        qa2: deploy/qa2
+        qa3: deploy/qa3
+        qa4: deploy/qa4
     secrets:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}

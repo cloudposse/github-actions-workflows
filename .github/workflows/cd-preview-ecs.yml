@@ -11,9 +11,6 @@ on:
       repository:
         required: true
         type: string
-      app:
-        required: true
-        type: string
       open:
         required: true
         type: boolean
@@ -111,8 +108,6 @@ jobs:
           environment: ${{ matrix.env }}
           namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
-          application: ${{ inputs.app }}
-          attributes: "us-west-2"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
