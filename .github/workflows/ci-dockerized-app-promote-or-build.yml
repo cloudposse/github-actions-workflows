@@ -21,6 +21,9 @@ on:
         required: false
         type: string
     secrets:
+      ecr-region:
+        required: true
+        description: "AWS region for ECR"
       ecr-iam-role:
         description: "ECR IAM role arn"
         required: true
@@ -50,7 +53,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          aws-region: us-west-2
+          aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
       - name: Checkout
