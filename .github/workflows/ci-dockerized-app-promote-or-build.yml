@@ -43,24 +43,9 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: validate deploy file
-    runs-on: ["self-hosted"]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Validate
-        id: validate
-        uses: cardinalby/schema-validator-action@v1
-        with:
-          file: ./apps/${{ inputs.app }}/deploy.yaml
-          schema: ./.github/configs/deploy.schema.json
-
   promote-or-build:
     name: promote or build
-    runs-on: ["self-hosted"]
-    needs: [ validate ]
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
@@ -137,7 +122,7 @@ jobs:
       tag: ${{ fromJson(steps.outputs.outputs.result).tag }}
 
   test:
-    runs-on: ["self-hosted"]
+    runs-on: ubuntu-latest
     if: ${{ needs.promote-or-build.outputs.builded == 'true' }}
     needs: [ promote-or-build ]
     steps:
