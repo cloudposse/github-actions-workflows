@@ -11,6 +11,9 @@ on:
       repository:
         required: true
         type: string
+      app:
+        required: false
+        type: string
       environment:
         description: "Environment name"
         type: string
@@ -19,6 +22,12 @@ on:
         description: "Spacelift organization"
         type: string
         required: true
+      matrix-step-name:
+        required: false
+        type: string
+      matrix-key:
+        required: false
+        type: string
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase for secret outputs"
@@ -62,6 +71,7 @@ jobs:
           environment: ${{ inputs.environment }}
           namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
+          application: ${{ inputs.app }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
