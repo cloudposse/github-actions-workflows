@@ -132,6 +132,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ secrets.ecr-region }}
+          role-to-assume: ${{ secrets.ecr-iam-role }}
+
       - name: Tests
         id: test
         uses: cloudposse/github-action-docker-compose-test-run@0.1.2
