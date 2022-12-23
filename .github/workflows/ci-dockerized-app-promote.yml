@@ -8,6 +8,9 @@ on:
       repository:
         required: true
         type: string
+      app:
+        required: false
+        type: string
       version:
         required: true
         type: string
@@ -46,12 +49,23 @@ jobs:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
+      - name: Context
+        id: context
+        uses: cloudposse/github-action-yaml-config-query@0.1.2
+        with:
+          query: .${{ inputs.app == '' }}
+          config: |
+            true:
+              image: ${{ inputs.repository }}         
+            false:
+              image: ${{ inputs.repository }}/${{ inputs.app }}
+
       - uses: cloudposse/github-action-docker-promote@0.1.0
         id: promote
         with:
           registry: ${{ secrets.registry }}
           organization: ${{ inputs.organization }}
-          repository: ${{ inputs.repository }}
+          repository: ${{ steps.context.outputs.image }}
           from: sha-${{ github.sha }}
           to: ${{ inputs.version }}
           use_metadata: false
