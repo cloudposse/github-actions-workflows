@@ -83,6 +83,15 @@ jobs:
           op: encode
           in: ${{ steps.promote.outputs.image }}
 
+      - uses: cloudposse/github-action-matrix-outputs-write@0.3.0
+        id: outputs
+        with:
+          matrix-step-name: ${{ inputs.matrix-step-name }}
+          matrix-key: ${{ inputs.matrix-key }}
+          outputs: |
+            image: ${{ steps.image.outputs.out }}
+            tag: ${{ steps.promote.outputs.tag }}            
+
     outputs:
-      image: ${{ steps.image.outputs.out }}
-      tag: ${{ steps.promote.outputs.tag }}
+      image: ${{ fromJson(steps.outputs.outputs.result).image }}
+      tag: ${{ fromJson(steps.outputs.outputs.result).tag }}
