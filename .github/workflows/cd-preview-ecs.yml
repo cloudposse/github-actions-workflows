@@ -145,6 +145,7 @@ jobs:
 
   cleanup:
     runs-on: ubuntu-latest
+    if: ${{ needs.preview.outputs.destroy_envs != '[]'  }}
     strategy:
       matrix:
         env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
