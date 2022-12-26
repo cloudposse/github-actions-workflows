@@ -1,8 +1,28 @@
-name: Monorepo Controller
+name: |-
+  Controller - Monorepo Controller
+  
+  Mocked monorepo controller that outputs list of applications, lists of apps with and without changes.
+
+  ### Usage 
+
+  ```yaml
+    name: Monorepo
+    on:
+      push:
+        branches: [ main ]
+  
+    jobs:
+      do:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-monorepo.yml@main
+        with:
+          dir: ./apps
+  ```
+
 on:
   workflow_call:
     inputs:
       dir:
+        description: Directory with applications
         required: true
         type: string
     outputs:

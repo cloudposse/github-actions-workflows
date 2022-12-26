@@ -1,25 +1,54 @@
-name: CD Helmfile
+name: |-
+  CD - Deploy to EKS with Helmfile
+  
+  Deploy Docker image to EKS with Helmfile
+  
+  ### Usage 
+  
+  ```yaml
+    name: Deploy
+    on:
+      push:
+        branches: [ main ]
+  
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-helmfile.yml@main
+        with:
+          image: registry.hub.docker.com/library/nginx
+          tag: latest
+          repository: ${{ github.event.repository.name }}
+          environment: dev
+        secrets:
+          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+  ```
+
 on:
   workflow_call:
     inputs:
       image:
+        description: "Docker Image to deploy"
         required: true
         type: string
       tag:
+        description: "Docker Image tag to deploy"
         required: true
         type: string
       repository:
+        description: "Repository name (ex. example for repo acme/example)"
         required: true
         type: string
       environment:
-        description: "Environment name"
+        description: "Environment name deploy to"
         type: string
         required: true
     secrets:
       secret-outputs-passphrase:
-        description: "Passphrase for secret outputs"
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
         required: true
       github-private-actions-pat:
+        description: "Github PAT allow to pull private repos"
         required: true
 
 permissions:

@@ -1,8 +1,27 @@
-name: Create hotfix release
+name: |-
+  Controller - Create hotfix release
+  
+  Create next patch version release 
+
+  ### Usage 
+
+  ```yaml
+    on:
+      push:
+        branches: [ 'release/**' ]
+
+    jobs:
+      do:
+        uses: cloudposse/github-action-workflows/.github/workflows/controller-hotfix-release.yml@main
+        with:
+          ref: ${{ github.ref }}
+  ```
+
 on:
   workflow_call:
     inputs:
       ref:
+        description: "The fully-formed ref of the branch or tag that triggered the workflow run"
         required: true
         type: string
     outputs:

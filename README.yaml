@@ -1,0 +1,58 @@
+---
+#
+# This is the canonical configuration for the `README.md`
+# Run `make readme` to rebuild the `README.md`
+#
+
+# Name of this project
+name: github-actions-workflows
+
+# Tags of this project
+tags:
+  - github-action
+  - release workflows
+  - CI/CD
+
+# Logo for this project
+#logo: docs/logo.png
+
+# License of this project
+license: "APACHE2"
+
+# Canonical GitHub repo
+github_repo: cloudposse/github-actions-workflows
+
+# Badges to display
+badges:
+  - name: "Latest Release"
+    image: "https://img.shields.io/github/release/cloudposse/github-actions-workflows.svg"
+    url: "https://github.com/cloudposse/github-actions-workflows/releases/latest"
+  - name: "Slack Community"
+    image: "https://slack.cloudposse.com/badge.svg"
+    url: "https://slack.cloudposse.com"
+
+related: []
+
+# Short description of this project
+description: Release workflow for composite Github Action
+
+introduction: |-
+  Use provided [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows) 
+  to implement consistent release workflow for Github Actions repositories across your organization.
+  Avoid duplication and simplify maintain of the workflows.  
+
+references:
+  - name: "github-actions-workflows"
+    description: "Reusable workflows for different types of projects"
+    url: "https://github.com/cloudposse/github-actions-workflows"
+  - name: "github-action-docker-build-push"
+    description: "Simple docker build action"
+    url: "https://github.com/cloudposse/github-action-docker-build-push"
+
+include:
+  - "docs/github-actions-reusable-workflows.md"
+
+# Contributors to this project
+contributors:
+  - name: "Igor Rodionov"
+    github: "goruha"

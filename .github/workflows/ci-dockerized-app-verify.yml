@@ -1,28 +1,62 @@
-name: CI - Dockerized Appication Verify
+name: |-
+  CI - Verify Docker image exists
+  
+  Verify Docker image exists on ECR
+
+  ### Usage 
+
+  ```yaml
+    name: Release
+    on:
+      release:
+        types: [published]
+
+    jobs:
+      ci:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-verify.yml@main
+        with:
+          organization: ${{ github.event.repository.owner.login }}
+          repository: ${{ github.event.repository.name }}
+          version: ${{ github.event.release.tag_name }}
+        secrets:
+          ecr-region: ${{ secrets.ecr-region }}
+          ecr-iam-role: ${{ secrets.ecr-iam-role }}
+          registry: ${{ secrets.registry }}
+          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+
+  ```
+
 on:
   workflow_call:
     inputs:
       organization:
+        description: "Repository owner organization (ex. acme for repo acme/example)"
         required: true
         type: string
       repository:
+        description: "Repository name (ex. example for repo acme/example)"
         required: true
         type: string
       app:
+        description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: true
         type: string
       version:
+        description: "Release version tag"
         required: true
         type: string
     secrets:
+      ecr-region:
+        description: "ECR AWS region"
+        required: true
       ecr-iam-role:
-        description: "ECR IAM role arn"
+        description: "IAM Role ARN provide ECR write/read access"
         required: true
       secret-outputs-passphrase:
-        description: "Passphrase for secret outputs"
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
         required: true
       registry:
-        description: "Docker registry"
+        description: "ECR Docker registry"
         required: true
     outputs:
       image:
@@ -43,7 +77,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          aws-region: us-west-2
+          aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
       - uses: cloudposse/github-action-docker-image-exists@0.1.0

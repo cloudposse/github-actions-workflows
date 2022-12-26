@@ -1,16 +1,41 @@
-name: Reingtegrate release branch
+name: |-
+  Controller - Reingtegrate hotfix branch
+  
+  Create PR into `target_branch` to reintegrate hotfix from current branch 
+
+  ### Usage 
+
+  ```yaml
+    name: Release
+    on:
+      release:
+        types: [published]
+
+    jobs:
+      do:
+        uses: cloudposse/github-action-workflows/.github/workflows/controller-hotfix-reintegrate.yml@main
+        with:
+          ref: ${{ github.ref }}
+          target_branch: main
+        secrets:
+          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+  ```
+
 on:
   workflow_call:
     inputs:
       ref:
+        description: "The fully-formed ref of the branch or tag that triggered the workflow run"
         required: true
         type: string
       target_branch:
-        required: true
+        description: "Target branch to reintegrate hotfix"
+        required: false
         type: string
         default: main
     secrets:
       github-private-actions-pat:
+        description: "Github PAT allow to create a pull request"
         required: true
 jobs:
   changes:

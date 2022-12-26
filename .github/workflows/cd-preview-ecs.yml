@@ -1,30 +1,77 @@
-name: CD Preview ECS
+name: |-
+  CD - Deploy to ECS QA/Preview envs with Spacelift
+  
+  Deploy Docker image to ECS QA/Preview envs with Spacelift
+  
+  ### Usage 
+  
+  ```yaml
+    name: Feature Branch
+    on:
+      pull_request:
+        branches: [ 'master' ]
+        types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+  
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecs.yml@main
+        if: ${{ always() }}
+        with:
+          image: registry.hub.docker.com/library/nginx
+          tag: latest
+          repository: ${{ github.event.repository.name }}
+          spacelift-organization: ${{ inputs.spacelift-organization }}
+          open: ${{ github.event.pull_request.state == 'open' }}
+          labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          exclusive: true
+          env-label: |
+            qa1: deploy/qa1
+            qa2: deploy/qa2
+            qa3: deploy/qa3
+            qa4: deploy/qa4
+        secrets:
+          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+          spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+          spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"  
+  ```
+
 on:
   workflow_call:
     inputs:
       image:
+        description: "Docker Image to deploy"
         required: true
         type: string
       tag:
+        description: "Docker Image tag to deploy"
         required: true
         type: string
       repository:
+        description: "Repository name (ex. example for repo acme/example)"
         required: true
         type: string
       app:
+        description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
         type: string
+      ref:
+        description: "The fully-formed ref of the branch or tag that triggered the workflow run"
+        required: true
+        type: string
       open:
+        description: "Pull Request open/close state. Set true if opened"
         required: true
         type: boolean
-        default: true
       labels:
-        required: true
+        description: "Pull Request labels"
+        required: false
         type: string
-      ref:
-        required: true
-        type: string
+        default: "{}"
       exclusive:
+        description: "Deactivate previous GitHub deployments"
+        required: false
         type: boolean
         default: true
       env-label:
@@ -33,24 +80,29 @@ on:
         default: |
           preview: deploy
       spacelift-organization:
-        description: "Spacelift organization"
+        description: "Spacelift organization name"
         type: string
         required: true
       matrix-step-name:
+        description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
       matrix-key:
+        description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
     secrets:
       secret-outputs-passphrase:
-        description: "Passphrase for secret outputs"
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
         required: true
       github-private-actions-pat:
+        description: "Github PAT allow to pull private repos"
         required: true
       spacelift-api-key-id:
+        description: "Spacelift API Key ID"
         required: true
       spacelift-api-key-secret:
+        description: "Spacelift API Key Secret"
         required: true
 
 permissions:

@@ -1,10 +1,31 @@
-name: Create Release branch
+name: |-
+  Controller - Create Release branch
+  
+  Create `release/{version}` branch for the release 
+
+  ### Usage 
+
+  ```yaml
+    name: Main branch
+    on:
+      release:
+        types: [published]
+
+    jobs:
+      do:
+        uses: cloudposse/github-action-workflows/.github/workflows/controller-hotfix-release-branch.yml@main
+        with:
+          version: ${{ github.event.release.tag_name }}
+  ```  
+
 on:
   workflow_call:
     inputs:
       version:
+        description: "Release version"
         required: true
         type: string
+
 jobs:
   release-branch:
     runs-on: ubuntu-latest

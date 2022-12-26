@@ -1,42 +1,79 @@
-name: CD ECS
+name: |-
+  CD - Deploy to ECS with Spacelift
+  
+  Deploy Docker image to ECS with Spacelift
+  
+  ### Usage 
+  
+  ```yaml
+    name: Deploy
+    on:
+      push:
+        branches: [ main ]
+  
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecs.yml@main
+        with:
+          image: registry.hub.docker.com/library/nginx
+          tag: latest
+          repository: ${{ github.event.repository.name }}
+          environment: dev
+          spacelift-organization: ${{ inputs.spacelift-organization }}
+        secrets:
+          secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
+          github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
+          spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
+          spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
+  ```
+
 on:
   workflow_call:
     inputs:
       image:
+        description: "Docker Image to deploy"
         required: true
         type: string
       tag:
+        description: "Docker Image tag to deploy"
         required: true
         type: string
       repository:
+        description: "Repository name (ex. example for repo acme/example)"
         required: true
         type: string
       app:
+        description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
         type: string
       environment:
-        description: "Environment name"
+        description: "Environment name deploy to"
         type: string
         required: true
       spacelift-organization:
-        description: "Spacelift organization"
+        description: "Spacelift organization name"
         type: string
         required: true
       matrix-step-name:
+        description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
       matrix-key:
+        description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
     secrets:
       secret-outputs-passphrase:
-        description: "Passphrase for secret outputs"
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
         required: true
       github-private-actions-pat:
+        description: "Github PAT allow to pull private repos"
         required: true
       spacelift-api-key-id:
+        description: "Spacelift API Key ID"
         required: true
       spacelift-api-key-secret:
+        description: "Spacelift API Key Secret"
         required: true
 
 permissions:

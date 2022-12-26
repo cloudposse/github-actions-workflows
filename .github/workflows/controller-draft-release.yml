@@ -1,8 +1,35 @@
-name: Draft release
+name: |-
+  Controller - Draft release
+  
+  Create or update draft release
+
+  ### Usage 
+
+  ```yaml
+    name: Draft release
+    on:
+      push:
+        branches: [ main ]
+
+    jobs:
+      do:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-verify.yml@main
+        with:
+          organization: ${{ github.event.repository.owner.login }}
+          repository: ${{ github.event.repository.name }}
+          version: ${{ github.event.release.tag_name }}
+        secrets:
+          ecr-region: ${{ secrets.ecr-region }}
+          ecr-iam-role: ${{ secrets.ecr-iam-role }}
+          registry: ${{ secrets.registry }}
+          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+  ```
+
 on:
   workflow_call:
     secrets:
       github-private-actions-pat:
+        description: "Github PAT allow to create release"
         required: true
 jobs:
   draft:

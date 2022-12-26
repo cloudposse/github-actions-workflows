@@ -1,37 +1,70 @@
-name: CI - Dockerized Appication Promote
+name: |-
+  CI - Promote Docker image 
+  
+  Promote Docker image to specific version tag and push it to ECR
+
+  ### Usage 
+
+  ```yaml
+    name: Release
+    on:
+      release:
+        types: [published]
+
+    jobs:
+      ci:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-promote.yml@main
+        with:
+          organization: ${{ github.event.repository.owner.login }}
+          repository: ${{ github.event.repository.name }}
+          version: ${{ github.event.release.tag_name }}
+        secrets:
+          ecr-region: ${{ secrets.ecr-region }}
+          ecr-iam-role: ${{ secrets.ecr-iam-role }}
+          registry: ${{ secrets.registry }}
+          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+
+  ```
+
 on:
   workflow_call:
     inputs:
       organization:
+        description: "Repository owner organization (ex. acme for repo acme/example)"
         required: true
         type: string
       repository:
+        description: "Repository name (ex. example for repo acme/example)"
         required: true
         type: string
       app:
+        description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
         type: string
       version:
+        description: "New version tag"
         required: true
         type: string
       matrix-step-name:
+        description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
       matrix-key:
+        description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
     secrets:
       ecr-region:
+        description: "ECR AWS region"
         required: true
-        description: "AWS region for ECR"
       ecr-iam-role:
-        description: "ECR IAM role arn"
+        description: "IAM Role ARN provide ECR write/read access"
         required: true
       secret-outputs-passphrase:
-        description: "Passphrase for secret outputs"
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
         required: true
       registry:
-        description: "Docker registry"
+        description: "ECR Docker registry"
         required: true
     outputs:
       image:
