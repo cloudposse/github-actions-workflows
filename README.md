@@ -77,19 +77,19 @@ Avoid duplication and simplify maintain of the workflows.
 
 | Name | Description |
 |------|-------------|
-| [CD - Deploy to ECS with Spacelift](#cd--deploy-to-ecs-with-spacelift) | Deploy Docker image to ECS with Spacelift |
-| [CD - Deploy to EKS with Helmfile](#cd--deploy-to-eks-with-helmfile) | Deploy Docker image to EKS with Helmfile |
-| [CD - Deploy to ECS QA/Preview envs with Spacelift](#cd--deploy-to-ecs-qapreview-envs-with-spacelift) | Deploy Docker image to ECS QA/Preview envs with Spacelift |
-| [CD - Deploy to EKS Preview envs with Helmfile](#cd--deploy-to-eks-preview-envs-with-helmfile) | Deploy Docker image to ECS Preview envs with Helmfile |
-| [CI - Build Docker image](#ci--build-docker-image) | Build Docker image and push it to ECR |
-| [CI - Promote or build Docker image](#ci--promote-or-build-docker-image) | Promote or build Docker image and push it to ECR |
-| [CI - Promote Docker image ](#ci--promote-docker-image) | Promote Docker image to specific version tag and push it to ECR |
-| [CI - Verify Docker image exists](#ci--verify-docker-image-exists) | Verify Docker image exists on ECR |
-| [Controller - Draft release](#controller--draft-release) | Create or update draft release |
-| [Controller - Reingtegrate hotfix branch](#controller--reingtegrate-hotfix-branch) | Create PR into `target\_branch` to reintegrate hotfix from current branch  |
-| [Controller - Create Release branch](#controller--create-release-branch) | Create `release/{version}` branch for the release  |
-| [Controller - Create hotfix release](#controller--create-hotfix-release) | Create next patch version release  |
-| [Controller - Monorepo Controller](#controller--monorepo-controller) | Mocked monorepo controller that outputs list of applications, lists of apps with and without changes. |
+| [CD - Deploy to ECS with Spacelift](#cd---deploy-to-ecs-with-spacelift) | Deploy Docker image to ECS with Spacelift |
+| [CD - Deploy to EKS with Helmfile](#cd---deploy-to-eks-with-helmfile) | Deploy Docker image to EKS with Helmfile |
+| [CD - Deploy to ECS QA/Preview envs with Spacelift](#cd---deploy-to-ecs-qapreview-envs-with-spacelift) | Deploy Docker image to ECS QA/Preview envs with Spacelift |
+| [CD - Deploy to EKS Preview envs with Helmfile](#cd---deploy-to-eks-preview-envs-with-helmfile) | Deploy Docker image to ECS Preview envs with Helmfile |
+| [CI - Build Docker image](#ci---build-docker-image) | Build Docker image and push it to ECR |
+| [CI - Promote or build Docker image](#ci---promote-or-build-docker-image) | Promote or build Docker image and push it to ECR |
+| [CI - Promote Docker image ](#ci---promote-docker-image) | Promote Docker image to specific version tag and push it to ECR |
+| [CI - Verify Docker image exists](#ci---verify-docker-image-exists) | Verify Docker image exists on ECR |
+| [Controller - Draft release](#controller---draft-release) | Create or update draft release |
+| [Controller - Reingtegrate hotfix branch](#controller---reingtegrate-hotfix-branch) | Create PR into `target\_branch` to reintegrate hotfix from current branch  |
+| [Controller - Create Release branch](#controller---create-release-branch) | Create `release/{version}` branch for the release  |
+| [Controller - Create hotfix release](#controller---create-hotfix-release) | Create next patch version release  |
+| [Controller - Monorepo Controller](#controller---monorepo-controller) | Mocked monorepo controller that outputs list of applications, lists of apps with and without changes. |
 
 
 
