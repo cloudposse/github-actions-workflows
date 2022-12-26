@@ -45,7 +45,7 @@ jobs:
 
       - name: Monorepo controller
         id: controller
-        uses: cloudposse/github-action-monorepo-random-controller@0.1.1
+        uses: cloudposse/github-action-monorepo-random-controller@0.2.0
         with:
           dir: ${{ inputs.dir }}
 
