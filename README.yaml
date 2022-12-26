@@ -34,7 +34,7 @@ badges:
 related: []
 
 # Short description of this project
-description: Release workflow for composite Github Action
+description: General purpose reusable Github Action workflows
 
 introduction: |-
   Use provided [GitHub Actions reusable workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows) 

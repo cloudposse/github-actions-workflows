@@ -676,7 +676,7 @@ Mocked monorepo controller that outputs list of applications, lists of apps with
       uses:  cloudposse/github-actions-workflows/.github/workflows/controller-monorepo.yml@main
       with:
         dir: ./apps
-```  
+```
 
 
 
