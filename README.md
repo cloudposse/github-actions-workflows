@@ -604,7 +604,7 @@ Create or update draft release
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
-| ref | The release target, i.e. branch or commit it should point to | string | ${{ github.sha }} | false |
+| ref | The release target, i.e. branch or commit it should point to | string | N/A | true |
 
 
 
