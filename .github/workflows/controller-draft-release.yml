@@ -15,7 +15,7 @@ name: |-
       do:
         uses:  cloudposse/github-actions-workflows/.github/workflows/controller-draft-release.yml@main
         with:
-          ref: ${{ github.sha }}
+          ref: $\{\{ github.sha \}\}
         secrets:
           github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
 
@@ -26,7 +26,8 @@ on:
     inputs:
       ref:
         description: "The release target, i.e. branch or commit it should point to"
-        required: true
+        required: false
+        default: ${{ github.sha }}
         type: string
 
     secrets:
