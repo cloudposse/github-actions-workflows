@@ -99,7 +99,7 @@ jobs:
             false:
               image: ${{ inputs.repository }}/${{ inputs.app }}
 
-      - uses: cloudposse/github-action-docker-promote@0.1.0
+      - uses: cloudposse/github-action-docker-promote@0.1.1
         id: promote
         with:
           registry: ${{ secrets.registry }}
@@ -116,7 +116,7 @@ jobs:
           op: encode
           in: ${{ steps.promote.outputs.image }}
 
-      - uses: cloudposse/github-action-matrix-outputs-write@0.3.0
+      - uses: cloudposse/github-action-matrix-outputs-write@0.3.1
         id: outputs
         with:
           matrix-step-name: ${{ inputs.matrix-step-name }}
