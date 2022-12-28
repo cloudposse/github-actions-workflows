@@ -15,10 +15,10 @@ name: |-
       do:
         uses: cloudposse/github-action-workflows/.github/workflows/controller-hotfix-reintegrate.yml@main
         with:
-          ref: ${{ github.ref }}
+          ref: $\{\{ github.ref \}\}
           target_branch: main
         secrets:
-          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
   ```
 
 on:

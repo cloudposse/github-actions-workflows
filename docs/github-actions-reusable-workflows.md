@@ -516,19 +516,21 @@ Create or update draft release
 
   jobs:
     do:
-      uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-verify.yml@main
+      uses:  cloudposse/github-actions-workflows/.github/workflows/controller-draft-release.yml@main
       with:
-        organization: ${{ github.event.repository.owner.login }}
-        repository: ${{ github.event.repository.name }}
-        version: ${{ github.event.release.tag_name }}
+        ref: ${{ github.sha }}
       secrets:
-        ecr-region: ${{ secrets.ecr-region }}
-        ecr-iam-role: ${{ secrets.ecr-iam-role }}
-        registry: ${{ secrets.registry }}
-        secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+        github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+
 ```
 
 
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| ref | The release target, i.e. branch or commit it should point to | string | ${{ github.sha }} | false |
 
 
 

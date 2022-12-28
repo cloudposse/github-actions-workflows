@@ -15,15 +15,15 @@ name: |-
     jobs:
       cd:
         uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecs.yml@main
-        if: ${{ always() }}
+        if: $\{\{ always() \}\}
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
-          repository: ${{ github.event.repository.name }}
-          spacelift-organization: ${{ inputs.spacelift-organization }}
-          open: ${{ github.event.pull_request.state == 'open' }}
-          labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          ref: ${{ github.event.pull_request.head.ref }}
+          repository: $\{\{ github.event.repository.name \}\}
+          spacelift-organization: $\{\{ inputs.spacelift-organization \}\}
+          open: $\{\{ github.event.pull_request.state == 'open' \}\}
+          labels: $\{\{ toJSON(github.event.pull_request.labels.*.name) \}\}
+          ref: $\{\{ github.event.pull_request.head.ref \}\}
           exclusive: true
           env-label: |
             qa1: deploy/qa1
@@ -31,10 +31,10 @@ name: |-
             qa3: deploy/qa3
             qa4: deploy/qa4
         secrets:
-          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
-          spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
-          spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"  
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
+          spacelift-api-key-id: "$\{\{ secrets.spacelift-api-key-id \}\}"
+          spacelift-api-key-secret: "$\{\{ secrets.spacelift-api-key-secret \}\}"  
   ```
 
 on:

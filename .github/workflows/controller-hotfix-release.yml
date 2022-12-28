@@ -14,7 +14,7 @@ name: |-
       do:
         uses: cloudposse/github-action-workflows/.github/workflows/controller-hotfix-release.yml@main
         with:
-          ref: ${{ github.ref }}
+          ref: $\{\{ github.ref \}\}
   ```
 
 on:

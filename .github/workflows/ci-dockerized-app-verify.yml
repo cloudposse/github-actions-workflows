@@ -15,14 +15,14 @@ name: |-
       ci:
         uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-verify.yml@main
         with:
-          organization: ${{ github.event.repository.owner.login }}
-          repository: ${{ github.event.repository.name }}
-          version: ${{ github.event.release.tag_name }}
+          organization: $\{\{ github.event.repository.owner.login \}\}
+          repository: $\{\{ github.event.repository.name \}\}
+          version: $\{\{ github.event.release.tag_name \}\}
         secrets:
-          ecr-region: ${{ secrets.ecr-region }}
-          ecr-iam-role: ${{ secrets.ecr-iam-role }}
-          registry: ${{ secrets.registry }}
-          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+          ecr-region: $\{\{ secrets.ecr-region \}\}
+          ecr-iam-role: $\{\{ secrets.ecr-iam-role \}\}
+          registry: $\{\{ secrets.registry \}\}
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
 
   ```
 

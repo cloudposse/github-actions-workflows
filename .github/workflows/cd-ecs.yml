@@ -17,14 +17,14 @@ name: |-
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
-          repository: ${{ github.event.repository.name }}
+          repository: $\{\{ github.event.repository.name \}\}
           environment: dev
-          spacelift-organization: ${{ inputs.spacelift-organization }}
+          spacelift-organization: $\{\{ inputs.spacelift-organization \}\}
         secrets:
-          secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
-          github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
-          spacelift-api-key-id: "${{ secrets.spacelift-api-key-id }}"
-          spacelift-api-key-secret: "${{ secrets.spacelift-api-key-secret }}"
+          secret-outputs-passphrase: "$\{\{ secrets.secret-outputs-passphrase \}\}"
+          github-private-actions-pat: "$\{\{ secrets.github-private-actions-pat \}\}"
+          spacelift-api-key-id: "$\{\{ secrets.spacelift-api-key-id \}\}"
+          spacelift-api-key-secret: "$\{\{ secrets.spacelift-api-key-secret \}\}"
   ```
 
 on:

@@ -15,20 +15,20 @@ name: |-
     jobs:
       cd:
         uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-helmfile.yml@main
-        if: ${{ always() }}
+        if: $\{\{ always() \}\}
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
-          repository: ${{ github.event.repository.name }}
-          open: ${{ github.event.pull_request.state == 'open' }}
-          labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          ref: ${{ github.event.pull_request.head.ref }}
+          repository: $\{\{ github.event.repository.name \}\}
+          open: $\{\{ github.event.pull_request.state == 'open' \}\}
+          labels: $\{\{ toJSON(github.event.pull_request.labels.*.name) \}\}
+          ref: $\{\{ github.event.pull_request.head.ref \}\}
           exclusive: false
           env-label: |
             preview: deploy
         secrets:
-          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
   ```
 
 on:

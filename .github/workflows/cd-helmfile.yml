@@ -17,11 +17,11 @@ name: |-
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
-          repository: ${{ github.event.repository.name }}
+          repository: $\{\{ github.event.repository.name \}\}
           environment: dev
         secrets:
-          secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
-          github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
   ```
 
 on:
