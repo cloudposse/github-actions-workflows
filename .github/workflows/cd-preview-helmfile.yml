@@ -208,7 +208,7 @@ jobs:
         if: ${{ steps.deployment.outputs.id != '' }}
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.cluster-role }}
+          role-to-assume: ${{ steps.environment.outputs.role }}
           role-skip-session-tagging: true
 
       - name: Destroy
