@@ -1,0 +1,104 @@
+name: |-
+  CD - Deploy to EKS with ArgoCD and Helmfile
+  
+  Deploy Docker image to EKS with ArgoCD and Helmfile
+  
+  ### Usage 
+  
+  ```yaml
+    name: Deploy
+    on:
+      push:
+        branches: [ main ]
+  
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-argocd.yml@main
+        with:
+          image: registry.hub.docker.com/library/nginx
+          tag: latest
+          repository: $\{\{ github.event.repository.name \}\}
+          environment: dev
+        secrets:
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: "Docker Image to deploy"
+        required: true
+        type: string
+      tag:
+        description: "Docker Image tag to deploy"
+        required: true
+        type: string
+      repository:
+        description: "Repository name (ex. example for repo acme/example)"
+        required: true
+        type: string
+      environment:
+        description: "Environment name deploy to"
+        type: string
+        required: true
+    secrets:
+      secret-outputs-passphrase:
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
+        required: true
+      github-private-actions-pat:
+        description: "Github PAT allow to pull private repos"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.0
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ inputs.image }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Environment Info
+        uses: cloudposse/github-action-interface-environment@0.1.0
+        id: environment
+        with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'argocd-environments/'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
+          environment: ${{ inputs.environment }}
+          namespace: ${{ inputs.environment }}
+          repository: ${{ inputs.repository }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-skip-session-tagging: true
+
+      - name: Deploy
+        uses: cloudposse/github-action-deploy-helmfile@0.2.0
+        id: deploy
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          cluster: ${{ steps.environment.outputs.cluster }}
+          environment: ${{ steps.environment.outputs.name }}
+          namespace: ${{ steps.environment.outputs.namespace }}
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          operation: deploy
