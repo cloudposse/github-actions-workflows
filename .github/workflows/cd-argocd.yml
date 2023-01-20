@@ -92,9 +92,12 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.0
+        uses: cloudposse/github-action-deploy-argocd@main
         id: deploy
         with:
+          toolchain: helmfile
+          path: ./deploy/helmfile.yaml
+          application: ${{ inputs.repository }}
           aws-region: ${{ steps.environment.outputs.region }}
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
@@ -102,3 +105,4 @@ jobs:
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
           operation: deploy
+          github-pat: ${{ secrets.github-private-actions-pat }}
