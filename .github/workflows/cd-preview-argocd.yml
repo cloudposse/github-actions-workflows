@@ -199,11 +199,11 @@ jobs:
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'environments'
+          implementation_path: 'argocd-environments/'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ inputs.namespace }}
+          namespace: ${{ needs.preview.outputs.namespace }}
           repository: ${{ inputs.repository }}
 
       - name: Configure AWS Credentials
@@ -215,10 +215,14 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Destroy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.0
+        uses: cloudposse/github-action-deploy-argocd@main
         if: ${{ steps.deployment.outputs.id != '' }}
         id: deploy
         with:
+          toolchain: helmfile
+          path: ./deploy/helmfile.yaml
+          application: ${{ inputs.repository }}
+          ssm-path: ${{ steps.environment.outputs.ssm-path }}
           aws-region: ${{ steps.environment.outputs.region }}
           cluster: ${{ steps.environment.outputs.cluster }}
           environment: ${{ steps.environment.outputs.name }}
@@ -226,6 +230,7 @@ jobs:
           image: "<none>"
           image-tag: "<none>"
           operation: destroy
+          github-pat: ${{ secrets.github-private-actions-pat }}
           debug: false
 
       - name: Inactivate deployment
