@@ -200,7 +200,7 @@ jobs:
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ inputs.namespace }}
+          namespace: ${{ needs.preview.outputs.namespace }}
           repository: ${{ inputs.repository }}
 
       - name: Configure AWS Credentials
