@@ -91,25 +91,8 @@ jobs:
           role-to-assume: ${{ steps.environment.outputs.role }}
           role-skip-session-tagging: true
 
-      - name: Setup helmfile
-        uses: mamezou-tech/setup-helmfile@v1.2.0
-        with:
-          helmfile-version: v0.148.1
-          helm-version: v3.10.2
-          install-kubectl: true         
-
       - name: Deploy
-        uses: cancue/eks-action@v0.0.2
-        env:
-          aws_region: ${{ steps.environment.outputs.region }}
-          cluster_name: ${{ steps.environment.outputs.cluster }}
-        with:
-          args: |
-            cat $KUBECONFIG          
-            kubectl get ns            
-  
-      - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.2
+        uses: cloudposse/github-action-deploy-helmfile@dev
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}
