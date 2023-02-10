@@ -96,20 +96,18 @@ jobs:
         with:
           helmfile-version: v0.148.1
           helm-version: v3.10.2
-          install-kubectl: true
-          
-      - name: Configure AWS Credentials
-        run: |-
-          apt install python3.8-venv
+          install-kubectl: true         
 
-      - uses: chrislennon/action-aws-cli@v1.1          
-
-      - name: Configure AWS Credentials
-        run: |-
-          aws eks --region ${{ steps.environment.outputs.region }} update-kubeconfig --name ${{ steps.environment.outputs.cluster }}
-          cat $KUBECONFIG
-          kubectl get ns
-
+      - name: Deploy
+        uses: cancue/eks-action@v0.0.2
+        env:
+          aws_region: ${{ steps.environment.outputs.region }}
+          cluster_name: ${{ steps.environment.outputs.cluster }}
+        with:
+          args: |
+            cat $KUBECONFIG          
+            kubectl get ns            
+  
       - name: Deploy
         uses: cloudposse/github-action-deploy-helmfile@0.2.2
         id: deploy
