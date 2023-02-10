@@ -98,6 +98,10 @@ jobs:
           helm-version: v3.10.2
           install-kubectl: true
           
+      - name: Configure AWS Credentials
+        run: |-
+          apt install python3.8-venv
+
       - uses: chrislennon/action-aws-cli@v1.1          
 
       - name: Configure AWS Credentials
