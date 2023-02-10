@@ -85,7 +85,7 @@ permissions:
 
 jobs:
   preview:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted"]
     steps:
       - name: Preview deployments controller
         uses: cloudposse/github-action-preview-environment-controller@0.8.0
@@ -166,7 +166,7 @@ jobs:
 
 
   destroy:
-    runs-on: ubuntu-latest
+    runs-on: ["self-hosted"]
     needs: [ preview ]
     if: ${{ needs.preview.outputs.destroy_envs != '[]'  }}
     strategy:
