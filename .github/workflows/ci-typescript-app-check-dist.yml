@@ -1,0 +1,96 @@
+name: |-
+  CI - Check dist Directory
+
+  This workflow helps ensure that generated contents of the `dist` directory matches the output of the `yarn build`
+  command. The `dist` directory has special meaning in GitHub Actions in that it that contains the runnable JS files. 
+
+  In Cloud Posse's TypeScript actions, the `dist` directory is generated through a build process from the TypeScript 
+  source files by running the `yarn build` command.
+
+
+  ### Usage 
+
+  ```yaml
+    name: Build
+    on:
+      push:
+        branches: [ main ]
+
+    jobs:
+      check-dist:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-typescript-app-check-dist.yml@main
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      commit-message:
+        description:
+          "Optional input to set a commit message. If it's not set, it defaults to 'Update the contents of dist
+          directory'"
+        required: false
+        type: string
+        default: "Update contents of the dist directory"
+      dist-path:
+        description: "Optional input to set a path to the dist folder. If it's not set, it defaults to './dist'"
+        required: false
+        type: string
+        default: "./dist"
+      node-version:
+        description:
+          "Optional input to set the version of Node.js used to build a project. The input syntax corresponds to the
+          setup-node's one"
+        required: false
+        type: string
+        default: "16.x"
+      node-caching:
+        description:
+          "Optional input to set up caching for the setup-node action. The input syntax corresponds to the setup-node's
+          one. Set to an empty string if caching isn't needed"
+        required: false
+        type: string
+        default: "yarn"
+
+jobs:
+  check-dist:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js ${{inputs.node-version}}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{inputs.node-version}}
+          cache: ${{inputs.node-caching}}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Rebuild the dist directory
+        run: yarn build
+
+      - name: Compare the expected and actual dist directories
+        run: |
+          if [ "$(git diff --ignore-space-at-eol ${{inputs.dist-path}} | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after the build. See the status below:"
+            git diff
+            echo "has-diff=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-diff=false" >> $GITHUB_OUTPUT
+          fi
+        id: diff
+
+      # If contents of the dist directory were different than expected, commit the changes and push them to the repo
+      - name: Commit and Push Changes
+        if: ${{steps.diff.outputs.has-diff == 'true'}}
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: ${{inputs.commit-message}}
+          file_pattern: ${{inputs.dist-path}}
