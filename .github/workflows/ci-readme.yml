@@ -1,0 +1,79 @@
+name: |-
+  CI - Terraform
+  
+  Build Docker image and push it to ECR
+  
+  ### Usage 
+
+  ```yaml
+    name: Deploy
+    on:
+      push:
+        branches: [ main ]
+
+    jobs:
+      ci:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
+        with:
+          organization: $\{\{ github.event.repository.owner.login \}\}
+          repository: $\{\{ github.event.repository.name \}\}
+        secrets:
+          ecr-region: $\{\{ secrets.ecr-region \}\}
+          ecr-iam-role: $\{\{ secrets.ecr-iam-role \}\}
+          registry: $\{\{ secrets.registry \}\}
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+  ```
+on:
+  workflow_call:
+    inputs:
+      organization:
+        description: "Repository owner organization (ex. acme for repo acme/example)"
+        required: true
+        type: string
+      repository:
+        description: "Repository name (ex. example for repo acme/example)"
+        required: true
+        type: string
+    secrets:
+      ecr-region:
+        description: "ECR AWS region"
+        required: true
+      ecr-iam-role:
+        description: "IAM Role ARN provide ECR write/read access"
+        required: true
+      secret-outputs-passphrase:
+        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
+        required: true
+      registry:
+        description: "ECR Docker registry"
+        required: true
+    outputs:
+      image:
+        description: "Docker Image"
+        value: ${{ jobs.build.outputs.image }}
+      tag:
+        description: "Docker image tag"
+        value: ${{ jobs.build.outputs.tag }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+    outputs:
+      image: ${{ steps.image.outputs.out }}
+      tag: ${{ steps.build.outputs.tag }}
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [ build ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
