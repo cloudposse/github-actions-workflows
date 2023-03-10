@@ -1,0 +1,39 @@
+name: |-
+  Controller - Release
+  
+  Create a github release
+
+  ### Usage 
+
+  ```yaml
+    name: Draft release
+    on:
+      push:
+        branches: [ main ]
+
+    jobs:
+      do:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+
+  ```
+
+on:
+  workflow_call:
+
+permissions:
+  id-token: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - # Get PR from merged commit to master
+        - uses: actions-ecosystem/action-get-merged-pull-request@v1
+          id: get-merged-pull-request
+
+      # Drafts your next Release notes as Pull Requests are merged into "main"
+      - uses: release-drafter/release-drafter@v5
+        with:
+          publish: ${{ !contains(steps.get-merged-pull-request.outputs.labels, 'no-release') }}
+          prerelease: false
+          config-name: auto-release.yml
