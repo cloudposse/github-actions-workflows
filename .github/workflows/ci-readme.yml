@@ -5,7 +5,7 @@ name: |-
   
   ### Usage 
   ```yaml
-    name: Generate Readme.md
+    name: Generate Readme
     on:
       workflow_call:
     
