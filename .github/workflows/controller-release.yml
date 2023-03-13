@@ -32,4 +32,5 @@ jobs:
         with:
           prerelease: false
           config-name: auto-release.yml
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
