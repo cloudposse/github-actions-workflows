@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: git diff --exit-code
 
-  find-terraform-directories:
+  tflint-find-dirs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -70,11 +70,11 @@ jobs:
 
   tflint:
     runs-on: ubuntu-latest
-    needs: find-terraform-directories
+    needs: tflint-find-dirs
     strategy:
       fail-fast: false
       matrix:
-        tfdir: ${{ fromJson(needs.find-terraform-directories.outputs.tfdirs_matrix) }}
+        tfdir: ${{ fromJson(needs.tflint-find-dirs.outputs.tfdirs_matrix) }}
     env:
       TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
       TFLINT_PLUGINS: aws
