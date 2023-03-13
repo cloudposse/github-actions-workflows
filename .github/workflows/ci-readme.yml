@@ -24,7 +24,7 @@ on:
     inputs:
       suggestions:
         description: "Enable Reviewdog suggestions (pull request only)"
-        required: false
+        required: true
         type: boolean
 
 jobs:
