@@ -20,9 +20,6 @@ name: |-
 on:
   workflow_call:
 
-permissions:
-  id-token: write
-
 jobs:
   draft:
     runs-on: ubuntu-latest

@@ -27,11 +27,6 @@ on:
         required: false
         type: boolean
 
-permissions:
-  pull-requests: write
-  id-token: write
-  contents: read
-
 jobs:
   update-readme:
     runs-on: ubuntu-latest
