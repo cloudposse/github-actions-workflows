@@ -25,7 +25,7 @@ on:
       suggestions:
         description: "Enable Reviewdog suggestions (pull request only)"
         required: false
-        type: bool
+        type: boolean
 
 permissions:
   id-token: read
