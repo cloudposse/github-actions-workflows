@@ -46,6 +46,7 @@ jobs:
         with:
           tool_name: "`make init readme/build`"
           cleanup: false
+          filter_mode: nofilter
 
       - name: Status check
         shell: bash
