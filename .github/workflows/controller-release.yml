@@ -21,7 +21,7 @@ on:
   workflow_call:
 
 jobs:
-  draft:
+  release:
     runs-on: ubuntu-latest
     steps:
       # Get PR from merged commit to master
