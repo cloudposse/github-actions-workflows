@@ -43,7 +43,7 @@ jobs:
 
       - name: Reviewdog suggester
         if: ${{ inputs.suggestions }}
-        uses: reviewdog/action-suggester@v1
+        uses: cloudposse/action-suggester@v1
         with:
           tool_name: "`make init readme/build`"
           cleanup: false
