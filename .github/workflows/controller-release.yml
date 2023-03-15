@@ -19,6 +19,12 @@ name: |-
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: "The release target, i.e. branch or commit it should point to"
+        required: false
+        default: ${{ github.sha }}
+        type: string
 
 jobs:
   release:
@@ -27,10 +33,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # Get PR from merged commit to master
+      - uses: actions-ecosystem/action-get-merged-pull-request@v1
+        id: get-merged-pull-request
+
       # Drafts your next Release notes as Pull Requests are merged into "main"
       - uses: release-drafter/release-drafter@v5
         with:
+          publish: ${{ !contains(steps.get-merged-pull-request.outputs.labels, 'no-release') }}
           prerelease: false
           config-name: auto-release.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

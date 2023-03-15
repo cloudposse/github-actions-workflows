@@ -1,0 +1,37 @@
+name: |-
+  Controller - Release
+  
+  Create a github release
+
+  ### Usage 
+
+  ```yaml
+    name: Draft release
+    on:
+      push:
+        branches: [ main ]
+
+    jobs:
+      do:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      labels:
+        description: The labels' name to be added. Must be separated with line breaks if there're multiple labels.
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Add labels
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: ${{ inputs.labels }}
