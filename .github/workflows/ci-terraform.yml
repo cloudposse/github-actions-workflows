@@ -31,7 +31,7 @@ on:
         description: "Overrides job runs-on setting"
         type: string
         required: false
-        default: ubuntu-latest
+        default: '"ubuntu-latest"'
 
 jobs:
   terraform-fmt:
