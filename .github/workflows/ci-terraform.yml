@@ -25,15 +25,17 @@ on:
     inputs:
       suggestions:
         description: "Enable Reviewdog suggestions (pull request only)"
-        required: true
         type: boolean
+        required: true
       runs-on:
+        description: "Overrides job runs-on setting"
         type: string
+        required: false
         default: ubuntu-latest
 
 jobs:
   terraform-fmt:
-    runs-on: ${{ fromJSON(format('{0}', inputs.runs-on)) }}
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     continue-on-error: true
     steps:
       - name: Checkout

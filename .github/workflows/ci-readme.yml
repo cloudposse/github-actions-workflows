@@ -25,10 +25,12 @@ on:
     inputs:
       suggestions:
         description: "Enable Reviewdog suggestions (pull request only)"
-        required: true
         type: boolean
+        required: true
       runs-on:
+        description: "Overrides job runs-on setting"
         type: string
+        required: false
         default: ubuntu-latest
 
 jobs:
