@@ -29,7 +29,7 @@ on:
         required: true
       runs-on:
         description: "Overrides job runs-on setting"
-        type: string
+        type: string  # json
         required: false
         default: '"ubuntu-latest"'
 

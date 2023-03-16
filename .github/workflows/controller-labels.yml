@@ -22,10 +22,15 @@ on:
       labels:
         description: The labels' name to be added. Must be separated with line breaks if there are multiple labels.
         required: true
+      runs-on:
+        description: "Overrides job runs-on setting"
+        type: string  # json
+        required: false
+        default: '"ubuntu-latest"'
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
