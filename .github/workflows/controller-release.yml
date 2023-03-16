@@ -24,7 +24,11 @@ on:
         required: false
         default: ${{ github.sha }}
         type: string
-
+      config-name:
+        description: "Name of the release drafter config file"
+        required: false
+        default: auto-release.yml
+        type: string
       runs-on:
         description: "Overrides job runs-on setting"
         type: string  # json
@@ -48,5 +52,7 @@ jobs:
         uses: release-drafter/release-drafter@v5
         with:
           publish: ${{ !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
-          config-name: auto-release.yml
+          config-name: ${{ inputs.config-name }}
           commitish: ${{ inputs.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
