@@ -27,10 +27,13 @@ on:
         description: "Enable Reviewdog suggestions (pull request only)"
         required: true
         type: boolean
+      runs-on:
+        type: string
+        default: ubuntu-latest
 
 jobs:
   update-readme:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(format('{0}', inputs.runs-on)) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
