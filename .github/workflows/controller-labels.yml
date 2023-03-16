@@ -1,19 +1,18 @@
 name: |-
-  Controller - Release
+  Controller - Labels
   
-  Create a github release
+  Label a pull request with one or more labels
 
   ### Usage 
 
   ```yaml
-    name: Draft release
+    name: Label pull request
     on:
-      push:
-        branches: [ main ]
+      workflow_call:
 
     jobs:
       do:
-        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-labels.yml@main
 
   ```
 
@@ -21,7 +20,7 @@ on:
   workflow_call:
     inputs:
       labels:
-        description: The labels' name to be added. Must be separated with line breaks if there're multiple labels.
+        description: The labels' name to be added. Must be separated with line breaks if there are multiple labels.
         required: true
 
 jobs:

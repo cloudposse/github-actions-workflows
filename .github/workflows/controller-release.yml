@@ -8,8 +8,7 @@ name: |-
   ```yaml
     name: Draft release
     on:
-      push:
-        branches: [ main ]
+      workflow_call:
 
     jobs:
       do:
