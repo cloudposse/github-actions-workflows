@@ -29,7 +29,7 @@ on:
         type: boolean
 
 jobs:
-  terraform-format:
+  terraform-fmt:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
