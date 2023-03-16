@@ -27,6 +27,10 @@ on:
         description: "Enable Reviewdog suggestions (pull request only)"
         type: boolean
         required: true
+      filter-mode:
+        description: "Reviewdog filter mode"
+        type: string
+        required: true
       runs-on:
         description: "Overrides job runs-on setting"
         type: string  # json
@@ -50,8 +54,7 @@ jobs:
         with:
           tool_name: "terraform fmt -recursive"
           cleanup: false
-          # diff_context as workaround to https://github.com/community/community/discussions/9099
-          filter_mode: diff_context
+          filter_mode: ${{ inputs.filter-mode }}
 
       - name: Status check
         shell: bash
@@ -108,6 +111,4 @@ jobs:
           tflint_rulesets: ${{ env.TFLINT_PLUGINS }}
           tflint_init: true
           working_directory: ${{ matrix.tfdir }}
-          # diff_context as workaround to https://github.com/community/community/discussions/9099
-          filter_mode: diff_context
-
+          filter_mode: ${{ inputs.filter-mode }}

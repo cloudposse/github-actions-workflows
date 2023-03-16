@@ -27,6 +27,10 @@ on:
         description: "Enable Reviewdog suggestions (pull request only)"
         type: boolean
         required: true
+      filter-mode:
+        description: "Reviewdog filter mode"
+        type: string
+        required: true
       runs-on:
         description: "Overrides job runs-on setting"
         type: string  # json
@@ -52,7 +56,8 @@ jobs:
         with:
           tool_name: "make init readme/build"
           cleanup: false
-          # diff_context will not work bc readme.yaml generates readme.md - always not in diff context
+          # diff_context will never work bc readme.yaml generates readme.md - always not in diff context
+          # Use ${{ inputs.filter-mode }} once issue is fixed https://github.com/community/community/discussions/9099
           filter_mode: nofilter
 
       - name: Status check
