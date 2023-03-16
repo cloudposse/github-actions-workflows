@@ -11,7 +11,7 @@ name: |-
       workflow_call:
 
     jobs:
-      do:
+      label:
         uses:  cloudposse/github-actions-workflows/.github/workflows/controller-labels.yml@main
 
   ```
@@ -29,7 +29,7 @@ on:
         default: '"ubuntu-latest"'
 
 jobs:
-  release:
+  add-labels:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
