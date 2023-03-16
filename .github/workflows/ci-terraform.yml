@@ -46,7 +46,7 @@ jobs:
 
       - name: Reviewdog suggester
         if: ${{ inputs.suggestions }}
-        uses: reviewdog/action-suggester@master
+        uses: reviewdog/action-suggester@v1
         with:
           tool_name: "terraform fmt -recursive"
           cleanup: false

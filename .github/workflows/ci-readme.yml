@@ -48,11 +48,11 @@ jobs:
 
       - name: Reviewdog suggester
         if: ${{ inputs.suggestions }}
-        uses: cloudposse/action-suggester@master
+        uses: reviewdog/action-suggester@v1
         with:
           tool_name: "make init readme/build"
           cleanup: false
-          # Will not work under diff_context bc readme.yaml generates readme.md
+          # diff_context will not work bc readme.yaml generates readme.md - always not in diff context
           filter_mode: nofilter
 
       - name: Status check
