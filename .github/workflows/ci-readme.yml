@@ -27,7 +27,7 @@ on:
         description: "Enable Reviewdog suggestions (pull request only)"
         type: boolean
         required: true
-      runs-on:
+      runs_on:
         description: "Overrides job runs-on setting"
         type: string
         required: false
@@ -35,7 +35,7 @@ on:
 
 jobs:
   update-readme:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ${{ fromJSON(inputs.runs_on) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
