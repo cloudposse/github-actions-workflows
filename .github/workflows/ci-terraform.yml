@@ -43,9 +43,10 @@ jobs:
         if: ${{ inputs.suggestions }}
         uses: cloudposse/action-suggester@master
         with:
-          tool_name: "`terraform fmt -recursive .`"
+          tool_name: "terraform fmt -recursive"
           cleanup: false
-          filter_mode: nofilter
+          # diff_context as workaround to https://github.com/community/community/discussions/9099
+          filter_mode: diff_context
 
       - name: Status check
         shell: bash
@@ -102,5 +103,6 @@ jobs:
           tflint_rulesets: ${{ env.TFLINT_PLUGINS }}
           tflint_init: true
           working_directory: ${{ matrix.tfdir }}
-          filter_mode: nofilter
+          # diff_context as workaround to https://github.com/community/community/discussions/9099
+          filter_mode: diff_context
 

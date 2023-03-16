@@ -45,8 +45,9 @@ jobs:
         if: ${{ inputs.suggestions }}
         uses: cloudposse/action-suggester@master
         with:
-          tool_name: "`make init readme/build`"
+          tool_name: "make init readme/build"
           cleanup: false
+          # Will not work under diff_context bc readme.yaml generates readme.md
           filter_mode: nofilter
 
       - name: Status check
