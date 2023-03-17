@@ -50,15 +50,27 @@ jobs:
           make init
           make readme/build
 
-      - name: Reviewdog suggester
-        if: ${{ inputs.suggestions }}
-        uses: reviewdog/action-suggester@v1
+      - name: Check readme
+        id: readme_diff
+        shell: bash
+        run: git diff --exit-code
+        continue-on-error: true
+
+      - name: Suggest readme update
+        if: ${{ inputs.suggestions && steps.readme_diff.outcome == 'failure' }}
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          tool_name: "make init readme/build"
-          cleanup: false
-          # diff_context will never work bc readme.yaml generates readme.md - always not in diff context
-          # Use ${{ inputs.filter-mode }} once issue is fixed https://github.com/community/community/discussions/9099
-          filter_mode: nofilter
+          message: |
+            README.md is outdated. Please run `make init readme/build` locally and push the file.
+
+# Use this instead of comment the issue fixed https://github.com/community/community/discussions/9099
+#      - name: Reviewdog suggester
+#        if: ${{ inputs.suggestions }}
+#        uses: reviewdog/action-suggester@v1
+#        with:
+#          tool_name: "make init readme/build"
+#          cleanup: false
+#          filter_mode: ${{ inputs.filter-mode }}
 
       - name: Status check
         shell: bash
