@@ -38,7 +38,7 @@ on:
         default: '"ubuntu-latest"'
 
 jobs:
-  update-readme:
+  check-readme:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
@@ -66,7 +66,7 @@ jobs:
             make init readme/build
             ```
 
-# Use this instead of comment the issue fixed https://github.com/community/community/discussions/9099
+# Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
 #      - name: Reviewdog suggester
 #        if: ${{ inputs.suggestions }}
 #        uses: reviewdog/action-suggester@v1
