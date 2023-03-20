@@ -52,6 +52,7 @@ jobs:
         with:
           checks: "syntax,duppatterns"
           owner_checker_allow_unowned_patterns: "false"
+          github_access_token: "${{ secrets.github_token }}"
 
       - uses: mszostok/codeowners-validator@v0.7.4
         # Main branch / Pull request from the same repo
@@ -63,5 +64,5 @@ jobs:
           #   checks: "files,syntax,owners,duppatterns"
           checks: "syntax,duppatterns,owners"
           owner_checker_allow_unowned_patterns: "false"
-          # GitHub access token is required only if the `owners` check is enabled
+          # Admin GitHub access token is required only if the `owners` check is enabled
           github_access_token: "${{ secrets.github_access_token }}"
