@@ -48,7 +48,7 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - name: Create reingtegration PR
-        uses: devops-infra/action-pull-request@v0.4.2
+        uses: devops-infra/action-pull-request@v0.5.5
         with:
           github_token: ${{ secrets.github-private-actions-pat }}
           target_branch: ${{ inputs.target_branch }}
