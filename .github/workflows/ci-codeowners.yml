@@ -34,7 +34,7 @@ on:
         required: false
         default: '["ubuntu-latest"]'
     secrets:
-      github_token:
+      github_access_token:
         description: "GitHub API token"
         required: false
 
@@ -64,4 +64,4 @@ jobs:
           checks: "syntax,duppatterns,owners"
           owner_checker_allow_unowned_patterns: "false"
           # GitHub access token is required only if the `owners` check is enabled
-          github_access_token: "${{ secrets.github_token }}"
+          github_access_token: "${{ secrets.github_access_token }}"
