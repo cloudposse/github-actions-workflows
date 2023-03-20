@@ -1,0 +1,67 @@
+name: |-
+  CI - Codeowners
+  
+  Validate CODEOWNERS and suggest changes
+  
+  ### Usage 
+  ```yaml
+    name: Validate Readme
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+      
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
+        with:
+          suggestions: true
+  ```
+on:
+  workflow_call:
+    inputs:
+      is_fork:
+        description: "Run workflow in fork mode (decreased permissions and features)"
+        type: boolean
+        required: false
+        default: false
+      runs-on:
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+    secrets:
+      github_token:
+        description: "GitHub API token"
+        required: true
+
+jobs:
+  validate-codeowners:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: mszostok/codeowners-validator@v0.7.4
+        # Pull request from a fork
+        name: "Validate CODEOWNERS"
+        if: ${{ inputs.is_fork }}
+        with:
+          checks: "syntax,duppatterns"
+          owner_checker_allow_unowned_patterns: "false"
+
+      - uses: mszostok/codeowners-validator@v0.7.4
+        # Main branch / Pull request from the same repo
+        name: "Validate CODEOWNERS"
+        if: ${{ ! inputs.is_fork }}
+        with:
+          # For now, remove "files" check to allow CODEOWNERS to specify non-existent
+          # files so we can use the same CODEOWNERS file for Terraform and non-Terraform repos
+          #   checks: "files,syntax,owners,duppatterns"
+          checks: "syntax,duppatterns,owners"
+          owner_checker_allow_unowned_patterns: "false"
+          # GitHub access token is required only if the `owners` check is enabled
+          github_access_token: "${{ secrets.github_token }}"

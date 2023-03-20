@@ -23,10 +23,10 @@ on:
         description: The labels' name to be added. Must be separated with line breaks if there are multiple labels.
         required: true
       runs-on:
-        description: "Overrides job runs-on setting"
-        type: string  # json
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
         required: false
-        default: '"ubuntu-latest"'
+        default: '["ubuntu-latest"]'
 
 jobs:
   add-labels:
