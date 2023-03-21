@@ -11,7 +11,7 @@ name: |-
       
     jobs:
       cd:
-        uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners.yml@main
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@main
   ```
 on:
   workflow_call:
@@ -21,6 +21,10 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: false
 
 jobs:
   validate-codeowners:
@@ -30,8 +34,13 @@ jobs:
         uses: actions/checkout@v3
 
       - uses: mszostok/codeowners-validator@v0.7.4
-        # Pull request from a fork
+        # Main branch / Pull request from the same repo
         name: "Validate CODEOWNERS"
         with:
-          checks: "syntax,duppatterns"
+          # For now, remove "files" check to allow CODEOWNERS to specify non-existent
+          # files so we can use the same CODEOWNERS file for Terraform and non-Terraform repos
+          #   checks: "files,syntax,owners,duppatterns"
+          checks: "syntax,duppatterns,owners"
           owner_checker_allow_unowned_patterns: "false"
+          # Admin GitHub access token is required only if the `owners` check is enabled
+          github_access_token: "${{ secrets.github_access_token }}"
