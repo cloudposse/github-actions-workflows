@@ -63,7 +63,7 @@ jobs:
           message: |
             README.md is outdated. Please run the following command locally and push the file.
             ```bash
-            make init readme/build
+            make init readme
             ```
             (chatops: `/rebuild-readme`)
 
