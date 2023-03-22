@@ -65,7 +65,6 @@ jobs:
             ```bash
             make init readme
             ```
-            (chatops: `/rebuild-readme`)
 
 # Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
 #      - name: Reviewdog suggester
