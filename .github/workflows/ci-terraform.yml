@@ -1,0 +1,114 @@
+name: |-
+  CI - Terraform
+  
+  Lint, format and validate terraform code
+  
+  ### Usage 
+  ```yaml
+    name: Validate Terraform
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+  
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
+        with:
+          suggestions: true
+  ```
+on:
+  workflow_call:
+    inputs:
+      suggestions:
+        description: "Enable Reviewdog suggestions (pull request only)"
+        type: boolean
+        required: true
+      filter-mode:
+        description: "Reviewdog filter mode"
+        type: string
+        required: true
+      runs-on:
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+jobs:
+  terraform-fmt:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Terraform format
+        uses: dflook/terraform-fmt@v1
+
+      - name: Reviewdog suggester
+        if: ${{ inputs.suggestions }}
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: "terraform fmt -recursive"
+          cleanup: false
+          filter_mode: ${{ inputs.filter-mode }}
+
+      - name: Status check
+        shell: bash
+        run: git diff --exit-code
+
+  tflint-find-dirs:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: set-matrix
+        run: |
+          matrix=$(find ./ -name '*.tf' \
+            -not -path '*/.terraform/*' \
+            -exec dirname {} \; \
+            | sort \
+            | uniq \
+            | jq --raw-input --slurp 'split("\n")| map(select(. != ""))')
+          echo "matrix=$(echo $matrix)" >> $GITHUB_OUTPUT
+    outputs:
+      tfdirs_matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+  tflint:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    needs: tflint-find-dirs
+    strategy:
+      fail-fast: false
+      matrix:
+        tfdir: ${{ fromJson(needs.tflint-find-dirs.outputs.tfdirs_matrix) }}
+    env:
+      TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
+      TFLINT_PLUGINS: aws
+      TFLINT_CACHE_VER: 1 # Increment this to force a cache refresh
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: hashicorp/setup-terraform@v2
+
+      - run: terraform init
+        working-directory: ${{ matrix.tfdir }}
+
+      - name: cache tflint plugins
+        id: cache-plugins
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TFLINT_PLUGIN_DIR }}
+          key: tflint-plugins-${{ env.TFLINT_CACHE_VER }}
+
+      - name: tflint
+        uses: reviewdog/action-tflint@v1.17.0
+        with:
+          reporter: ${{ inputs.suggestions && 'github-pr-review' || 'local' }}
+          fail_on_error: true
+          tflint_rulesets: ${{ env.TFLINT_PLUGINS }}
+          tflint_init: true
+          working_directory: ${{ matrix.tfdir }}
+          filter_mode: ${{ inputs.filter-mode }}

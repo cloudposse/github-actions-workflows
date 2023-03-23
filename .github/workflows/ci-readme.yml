@@ -1,0 +1,80 @@
+name: |-
+  CI - Readme
+  
+  Validate README.yaml, README.md and suggest changes
+  
+  ### Usage 
+  ```yaml
+    name: Validate Readme
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+      
+    jobs:
+      cd:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
+        with:
+          suggestions: true
+  ```
+on:
+  workflow_call:
+    inputs:
+      suggestions:
+        description: "Enable Reviewdog suggestions (pull request only)"
+        type: boolean
+        required: true
+      filter-mode:
+        description: "Reviewdog filter mode"
+        type: string
+        required: true
+      runs-on:
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+jobs:
+  validate-readme:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Generate readme
+        shell: bash
+        run: |
+          make init
+          make readme/build
+
+      - name: Check readme
+        id: readme_diff
+        shell: bash
+        run: git diff --exit-code
+        continue-on-error: true
+
+      - name: Suggest readme update
+        if: ${{ inputs.suggestions && steps.readme_diff.outcome == 'failure' }}
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            README.md is outdated. Please run the following command locally and push the file.
+            ```bash
+            make init readme
+            ```
+
+# Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
+#      - name: Reviewdog suggester
+#        if: ${{ inputs.suggestions }}
+#        uses: reviewdog/action-suggester@v1
+#        with:
+#          tool_name: "make init readme/build"
+#          cleanup: false
+#          filter_mode: ${{ inputs.filter-mode }}
+
+      - name: Status check
+        shell: bash
+        run: git diff --exit-code

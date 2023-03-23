@@ -1,0 +1,58 @@
+name: |-
+  Controller - Release
+  
+  Create a github release
+
+  ### Usage 
+
+  ```yaml
+    name: Draft release
+    on:
+      workflow_call:
+
+    jobs:
+      release:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "The release target, i.e. branch or commit it should point to"
+        required: false
+        default: ${{ github.sha }}
+        type: string
+      config-name:
+        description: "Name of the release drafter config file"
+        required: false
+        default: auto-release.yml
+        type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-formatted list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+jobs:
+  release:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Fetch pull request for the given ref
+        id: get-pull-request
+        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        with:
+          sha: ${{ inputs.ref }}
+
+      - name: Do release
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: ${{ !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
+          config-name: ${{ inputs.config-name }}
+          commitish: ${{ inputs.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
