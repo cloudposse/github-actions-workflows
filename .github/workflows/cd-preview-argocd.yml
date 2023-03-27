@@ -69,6 +69,10 @@ on:
         type: string
         default: |
           preview: deploy
+      synchronously:
+        type: boolean
+        description: "Wait until ArgoCD successfully apply the changes"
+        default: false
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -152,10 +156,11 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@main
+        uses: cloudposse/github-action-deploy-argocd@0.3.0
         id: deploy
         with:
           toolchain: helmfile
+          synchronously: ${{ inputs.synchronously }}
           path: ./deploy/helmfile.yaml
           application: ${{ inputs.repository }}
           ssm-path: ${{ steps.environment.outputs.ssm-path }}
@@ -215,11 +220,12 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Destroy
-        uses: cloudposse/github-action-deploy-argocd@main
+        uses: cloudposse/github-action-deploy-argocd@0.3.0
         if: ${{ steps.deployment.outputs.id != '' }}
         id: deploy
         with:
           toolchain: helmfile
+          synchronously: ${{ inputs.synchronously }}
           path: ./deploy/helmfile.yaml
           application: ${{ inputs.repository }}
           ssm-path: ${{ steps.environment.outputs.ssm-path }}

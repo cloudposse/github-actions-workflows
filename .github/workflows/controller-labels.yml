@@ -21,6 +21,7 @@ on:
     inputs:
       labels:
         description: The labels' name to be added. Must be separated with line breaks if there are multiple labels.
+        type: string
         required: true
       runs-on:
         description: "Overrides job runs-on setting (json-formatted list)"
