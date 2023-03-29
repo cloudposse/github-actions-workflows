@@ -30,7 +30,7 @@ on:
         default: auto-release.yml
         type: string
       runs-on:
-        description: "Overrides job runs-on setting (json-formatted list)"
+        description: "Overrides job runs-on setting (json-encoded list)"
         type: string
         required: false
         default: '["ubuntu-latest"]'
