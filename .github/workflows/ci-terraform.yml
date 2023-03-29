@@ -79,11 +79,11 @@ jobs:
 
   lint:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    needs: tflint-find-dirs
+    needs: lint-find-dirs
     strategy:
       fail-fast: false
       matrix:
-        tfdir: ${{ fromJson(needs.tflint-find-dirs.outputs.tfdirs_matrix) }}
+        tfdir: ${{ fromJson(needs.lint-find-dirs.outputs.tfdirs_matrix) }}
     env:
       TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
       TFLINT_PLUGINS: aws
