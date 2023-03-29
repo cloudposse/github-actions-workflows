@@ -38,7 +38,7 @@ on:
         default: '["ubuntu-latest"]'
 
 jobs:
-  validate-readme:
+  validate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
