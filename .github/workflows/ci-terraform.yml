@@ -38,7 +38,7 @@ on:
         default: '["ubuntu-latest"]'
 
 jobs:
-  terraform-fmt:
+  format:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     continue-on-error: true
     steps:
@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: git diff --exit-code
 
-  tflint-find-dirs:
+  lint-find-dirs:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - uses: actions/checkout@v3
@@ -77,7 +77,7 @@ jobs:
     outputs:
       tfdirs_matrix: ${{ steps.set-matrix.outputs.matrix }}
 
-  tflint:
+  lint:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     needs: tflint-find-dirs
     strategy:
