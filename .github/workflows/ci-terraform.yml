@@ -40,7 +40,6 @@ on:
 jobs:
   format:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v3
