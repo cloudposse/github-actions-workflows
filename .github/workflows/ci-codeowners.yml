@@ -10,8 +10,10 @@ name: |-
       workflow_call:
       
     jobs:
-      cd:
+      ci-codeowners:
         uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@main
+        with:
+          is_fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
   ```
 on:
   workflow_call:

@@ -1,7 +1,7 @@
 name: |-
-  CI - Terraform
+  CI - Terraform ChatOps
   
-  Lint, format and validate terraform code
+  Trigger terraform tests using ChatOps
   
   ### Usage 
   ```yaml
@@ -15,8 +15,8 @@ name: |-
       contents: read
   
     jobs:
-      cd:
-        uses: cloudposse/github-actions-workflows/.github/workflows/ci-chatops.yml@main
+      ci-terraform-chatops:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
         with:
           suggestions: true
   ```
@@ -40,7 +40,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: cloudposse/actions
-          commands: terraform-test
+          commands: terratest
           permission: triage
           issue-type: pull-request
           reactions: false
