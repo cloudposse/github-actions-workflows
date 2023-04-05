@@ -1,15 +1,43 @@
-name: "scheduled-context"
+name: |-
+  Scheduled Context
+  
+  Scheduled update of context.tf and related docs
+  
+  ### Usage 
+  ```yaml
+    name: scheduled-context
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+      
+    jobs:
+      scheduled-context:
+        uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@main
+  ```
 on:
-  schedule:
-  # Update context.tf nightly
-  - cron:  '0 3 * * *'
+  workflow_call:
+    inputs:
+      base-branch:
+        description: "Repo default branch"
+        type: string
+        required: false
+        default: 'main'
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
 
 jobs:
   update:
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v3
 
     - name: Update context.tf
       shell: bash
@@ -27,7 +55,7 @@ jobs:
             make init
             make github/init/context.tf
             make readme/build
-            echo "::set-output name=create_pull_request::true"
+            echo "create_pull_request=true" >> $GITHUB_OUTPUT
           fi
         else
           echo "This module has not yet been updated to support the context.tf pattern! Please update in order to support automatic updates."
@@ -35,11 +63,8 @@ jobs:
 
     - name: Create Pull Request
       if: steps.update.outputs.create_pull_request == 'true'
-      uses: cloudposse/actions/github/create-pull-request@0.30.0
+      uses: cloudposse/actions/github/create-pull-request@0.33.0
       with:
-        token: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
-        committer: 'cloudpossebot <11232728+cloudpossebot@users.noreply.github.com>'
-        author: 'cloudpossebot <11232728+cloudpossebot@users.noreply.github.com>'
         commit-message: Update context.tf from origin source
         title: Update context.tf
         body: |-
@@ -50,7 +75,7 @@ jobs:
           To support all the features of the `context` interface.
 
         branch: auto-update/context.tf
-        base: master
+        base: ${{ inputs.base-branch }}
         delete-branch: true
         labels: |
           auto-update
