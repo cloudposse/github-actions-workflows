@@ -1,4 +1,4 @@
-name: "auto-readme"
+name: "scheduled-context"
 on:
   workflow_dispatch:
 

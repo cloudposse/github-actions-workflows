@@ -1,4 +1,4 @@
-name: "auto-context"
+name: "scheduled-context"
 on:
   schedule:
   # Update context.tf nightly
