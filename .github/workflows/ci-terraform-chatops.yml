@@ -30,7 +30,7 @@ on:
         default: '["ubuntu-latest"]'
 
 jobs:
-  terraform-test:
+  terratest:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
