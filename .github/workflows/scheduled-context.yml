@@ -1,0 +1,82 @@
+name: |-
+  Scheduled Context
+  
+  Scheduled update of context.tf and related docs
+  
+  ### Usage 
+  ```yaml
+    name: scheduled-context
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+      
+    jobs:
+      scheduled-context:
+        uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@main
+  ```
+on:
+  workflow_call:
+    inputs:
+      base-branch:
+        description: "Repo default branch"
+        type: string
+        required: false
+        default: 'main'
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+jobs:
+  update:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Update context.tf
+      shell: bash
+      id: update
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        if [[ -f context.tf ]]; then
+          echo "Discovered existing context.tf! Fetching most recent version to see if there is an update."
+          curl -o context.tf -fsSL https://raw.githubusercontent.com/cloudposse/terraform-null-label/master/exports/context.tf
+          if git diff --no-patch --exit-code context.tf; then
+            echo "No changes detected! Exiting the job..."
+          else
+            echo "context.tf file has changed. Update examples and rebuild README.md."
+            make init
+            make github/init/context.tf
+            make readme/build
+            echo "create_pull_request=true" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "This module has not yet been updated to support the context.tf pattern! Please update in order to support automatic updates."
+        fi
+
+    - name: Create Pull Request
+      if: steps.update.outputs.create_pull_request == 'true'
+      uses: cloudposse/actions/github/create-pull-request@0.33.0
+      with:
+        commit-message: Update context.tf from origin source
+        title: Update context.tf
+        body: |-
+          ## what
+          This is an auto-generated PR that updates the `context.tf` file to the latest version from `cloudposse/terraform-null-label`
+
+          ## why
+          To support all the features of the `context` interface.
+
+        branch: auto-update/context.tf
+        base: ${{ inputs.base-branch }}
+        delete-branch: true
+        labels: |
+          auto-update
+          context

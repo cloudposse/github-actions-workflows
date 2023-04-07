@@ -1,0 +1,74 @@
+name: |-
+  Scheduled Readme
+  
+  Scheduled update of readme.md
+  
+  ### Usage 
+  ```yaml
+    name: scheduled-readme
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+      
+    jobs:
+      scheduled-readme:
+        uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@main
+  ```
+on:
+  workflow_call:
+    inputs:
+      base-branch:
+        description: "Repo default branch"
+        type: string
+        required: false
+        default: 'main'
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+jobs:
+  update:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Update readme
+      shell: bash
+      id: update
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        make init
+        make readme/build
+        # Ignore changes if they are only whitespace
+        if ! git diff --quiet README.md && git diff --ignore-all-space --ignore-blank-lines --quiet README.md; then
+          git restore README.md
+          echo Ignoring whitespace-only changes in README
+        fi
+
+    - name: Create Pull Request
+      uses: cloudposse/actions/github/create-pull-request@0.33.0
+      with:
+        commit-message: Update README.md and docs
+        title: Update README.md and docs
+        body: |-
+          ## what
+          This is an auto-generated PR that updates the README.md and docs
+
+          ## why
+          To have most recent changes of README.md and doc from origin templates
+
+        branch: auto-update/readme
+        base: ${{ inputs.base-branch }}
+        delete-branch: true
+        labels: |
+          auto-update
+          no-release
+          readme
