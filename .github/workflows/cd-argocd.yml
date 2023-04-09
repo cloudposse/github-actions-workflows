@@ -35,6 +35,10 @@ on:
         description: "Docker Image tag to deploy"
         required: true
         type: string
+      organization:
+        description: "Repository owner organization (ex. acme for repo acme/example)"
+        required: true
+        type: string        
       repository:
         description: "Repository name (ex. example for repo acme/example)"
         required: true
@@ -112,5 +116,5 @@ jobs:
           image-tag: ${{ inputs.tag }}
           operation: deploy
           github-pat: ${{ secrets.github-private-actions-pat }}
-          repository: ${{ inputs.repository }}
+          repository: ${{ inputs.organization }}/${{ inputs.repository }}
           ref: ${{ github.sha }}
