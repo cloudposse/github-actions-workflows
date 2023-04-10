@@ -42,6 +42,10 @@ on:
         description: "Docker Image tag to deploy"
         required: true
         type: string
+      organization:
+        description: "Repository owner organization (ex. acme for repo acme/example)"
+        required: true
+        type: string
       repository:
         description: "Repository name (ex. example for repo acme/example)"
         required: true
@@ -172,6 +176,8 @@ jobs:
           image-tag: ${{ inputs.tag }}
           operation: deploy
           github-pat: ${{ secrets.github-private-actions-pat }}
+          repository: ${{ inputs.organization }}/${{ inputs.repository }}
+          ref: ${{ github.sha }}
 
   destroy:
     runs-on: ubuntu-latest
@@ -238,6 +244,8 @@ jobs:
           operation: destroy
           github-pat: ${{ secrets.github-private-actions-pat }}
           debug: false
+          repository: ${{ inputs.organization }}/${{ inputs.repository }}
+          ref: ${{ github.sha }}
 
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0
