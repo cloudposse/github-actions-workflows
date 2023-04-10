@@ -31,6 +31,10 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
 
 jobs:
   update:
@@ -72,3 +76,6 @@ jobs:
           auto-update
           no-release
           readme
+        # Using PAT, otherwise PR won't trigger other workflows
+        # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+        token: ${{ secrets.github_access_token }}
