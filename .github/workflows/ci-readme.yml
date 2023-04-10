@@ -63,7 +63,8 @@ jobs:
           message: |
             README.md is outdated. Please run the following command locally and push the file.
             ```bash
-            make init readme
+            make init 
+            make readme
             ```
 
 # Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
