@@ -18,7 +18,7 @@ name: |-
       ci-terraform-chatops:
         uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
         secrets:
-          github_access_token: ${{ secrets.github_access_token }}
+          github_access_token: $\{\{ secrets.REPO_ACCESS_TOKEN \}\}
   ```
 on:
   workflow_call:
