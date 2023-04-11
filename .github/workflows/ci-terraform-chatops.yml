@@ -17,6 +17,8 @@ name: |-
     jobs:
       ci-terraform-chatops:
         uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
+        secrets:
+          github_access_token: ${{ secrets.github_access_token }}
   ```
 on:
   workflow_call:
@@ -26,6 +28,10 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
 
 jobs:
   terratest:
@@ -36,7 +42,7 @@ jobs:
 
       - uses: cloudposse/actions/github/slash-command-dispatch@0.33.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.github_access_token }}
           repository: cloudposse/actions
           commands: terratest
           permission: triage
