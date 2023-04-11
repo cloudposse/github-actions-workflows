@@ -160,7 +160,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.4.0
+        uses: cloudposse/github-action-deploy-argocd@0.4.1
         id: deploy
         with:
           toolchain: helmfile
@@ -226,7 +226,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Destroy
-        uses: cloudposse/github-action-deploy-argocd@0.4.0
+        uses: cloudposse/github-action-deploy-argocd@0.4.1
         if: ${{ steps.deployment.outputs.id != '' }}
         id: deploy
         with:
