@@ -31,6 +31,10 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
 
 jobs:
   update:
@@ -80,3 +84,6 @@ jobs:
         labels: |
           auto-update
           context
+        # Requires a GitHub PAT used to open PRs that trigger other workflows
+        # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+        token: ${{ secrets.github_access_token }}
