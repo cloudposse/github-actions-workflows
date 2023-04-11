@@ -84,6 +84,6 @@ jobs:
         labels: |
           auto-update
           context
-        # Using PAT, otherwise PR won't trigger other workflows
+        # Requires a GitHub PAT used to open PRs that trigger other workflows
         # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
         token: ${{ secrets.github_access_token }}
