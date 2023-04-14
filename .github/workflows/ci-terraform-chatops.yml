@@ -1,0 +1,50 @@
+name: |-
+  CI - Terraform ChatOps
+  
+  Trigger terraform tests using ChatOps
+  
+  ### Usage 
+  ```yaml
+    name: Terraform ChatOps
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+  
+    jobs:
+      ci-terraform-chatops:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
+        secrets:
+          github_access_token: $\{\{ secrets.REPO_ACCESS_TOKEN \}\}
+  ```
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: true
+
+jobs:
+  terratest:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: cloudposse/actions/github/slash-command-dispatch@0.33.0
+        with:
+          token: ${{ secrets.github_access_token }}
+          repository: cloudposse/actions
+          commands: terratest
+          permission: triage
+          issue-type: pull-request
+          reactions: false
