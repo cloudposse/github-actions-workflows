@@ -89,6 +89,7 @@ Avoid duplication and simplify maintain of the workflows.
 | [CI - Promote Docker image ](#ci---promote-docker-image) | Promote Docker image to specific version tag and push it to ECR |
 | [CI - Verify Docker image exists](#ci---verify-docker-image-exists) | Verify Docker image exists on ECR |
 | [CI - Readme](#ci---readme) | Validate README.yaml, README.md and suggest changes |
+| [CI - Terraform ChatOps](#ci---terraform-chatops) | Trigger terraform tests using ChatOps |
 | [CI - Terraform](#ci---terraform) | Lint, format and validate terraform code |
 | [CI - Check dist Directory](#ci---check-dist-directory) | This workflow helps ensure that generated contents of the `dist` directory matches the output of the `yarn build` |
 | [Controller - Draft release](#controller---draft-release) | Create or update draft release |
@@ -98,6 +99,8 @@ Avoid duplication and simplify maintain of the workflows.
 | [Controller - Labels](#controller---labels) | Label a pull request with one or more labels |
 | [Controller - Monorepo Controller](#controller---monorepo-controller) | Mocked monorepo controller that outputs list of applications, lists of apps with and without changes. |
 | [Controller - Release](#controller---release) | Create a github release |
+| [Scheduled Context](#scheduled-context) | Scheduled update of context.tf and related docs |
+| [Scheduled Readme](#scheduled-readme) | Scheduled update of readme.md |
 
 
 
@@ -135,6 +138,7 @@ Deploy Docker image to EKS with ArgoCD and Helmfile
 |------|-------------|------|---------|----------|
 | environment | Environment name deploy to | string | N/A | true |
 | image | Docker Image to deploy | string | N/A | true |
+| organization | Repository owner organization (ex. acme for repo acme/example) | string | N/A | true |
 | repository | Repository name (ex. example for repo acme/example) | string | N/A | true |
 | synchronously | Wait until ArgoCD successfully apply the changes | boolean | false | false |
 | tag | Docker Image tag to deploy | string | N/A | true |
@@ -305,6 +309,7 @@ Deploy Docker image to ECS Preview envs with Helmfile
 | image | Docker Image to deploy | string | N/A | true |
 | labels | Pull Request labels | string | {} | false |
 | open | Pull Request open/close state. Set true if opened | boolean | N/A | true |
+| organization | Repository owner organization (ex. acme for repo acme/example) | string | N/A | true |
 | ref | The fully-formed ref of the branch or tag that triggered the workflow run | string | N/A | true |
 | repository | Repository name (ex. example for repo acme/example) | string | N/A | true |
 | synchronously | Wait until ArgoCD successfully apply the changes | boolean | false | false |
@@ -469,8 +474,10 @@ Validate CODEOWNERS and suggest changes
     workflow_call:
     
   jobs:
-    cd:
+    ci-codeowners:
       uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@main
+      with:
+        is_fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
 ```
 
 
@@ -480,7 +487,7 @@ Validate CODEOWNERS and suggest changes
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
 | is\_fork | Run workflow in fork mode (decreased permissions and features) | boolean | N/A | true |
-| runs-on | Overrides job runs-on setting (json-formatted list) | string | ["ubuntu-latest"] | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
 
 
 
@@ -750,10 +757,11 @@ Validate README.yaml, README.md and suggest changes
     contents: read
     
   jobs:
-    cd:
+    ci-readme:
       uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
       with:
         suggestions: true
+        filter-mode: diff_context
 ```
 
 
@@ -763,10 +771,53 @@ Validate README.yaml, README.md and suggest changes
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
 | filter-mode | Reviewdog filter mode | string | N/A | true |
-| runs-on | Overrides job runs-on setting (json-formatted list) | string | ["ubuntu-latest"] | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
 | suggestions | Enable Reviewdog suggestions (pull request only) | boolean | N/A | true |
 
 
+
+
+
+
+
+
+## CI - Terraform ChatOps
+
+Trigger terraform tests using ChatOps
+
+### Usage 
+```yaml
+  name: Terraform ChatOps
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+
+  jobs:
+    ci-terraform-chatops:
+      uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
+      secrets:
+        github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | true |
 
 
 
@@ -789,10 +840,11 @@ Lint, format and validate terraform code
     contents: read
 
   jobs:
-    cd:
+    ci-terraform:
       uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
       with:
         suggestions: true
+        filter-mode: diff_context
 ```
 
 
@@ -802,7 +854,7 @@ Lint, format and validate terraform code
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
 | filter-mode | Reviewdog filter mode | string | N/A | true |
-| runs-on | Overrides job runs-on setting (json-formatted list) | string | ["ubuntu-latest"] | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
 | suggestions | Enable Reviewdog suggestions (pull request only) | boolean | N/A | true |
 
 
@@ -1025,7 +1077,8 @@ Label a pull request with one or more labels
   jobs:
     label:
       uses:  cloudposse/github-actions-workflows/.github/workflows/controller-labels.yml@main
-
+      with:
+        labels: ['ready-for-review']
 ```
 
 
@@ -1035,7 +1088,7 @@ Label a pull request with one or more labels
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
 | labels | The labels' name to be added. Must be separated with line breaks if there are multiple labels. | string | N/A | true |
-| runs-on | Overrides job runs-on setting (json-formatted list) | string | ["ubuntu-latest"] | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
 
 
 
@@ -1110,9 +1163,93 @@ Create a github release
 |------|-------------|------|---------|----------|
 | config-name | Name of the release drafter config file | string | auto-release.yml | false |
 | ref | The release target, i.e. branch or commit it should point to | string | ${{ github.sha }} | false |
-| runs-on | Overrides job runs-on setting (json-formatted list) | string | ["ubuntu-latest"] | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
 
 
+
+
+
+
+
+
+## Scheduled Context
+
+Scheduled update of context.tf and related docs
+
+### Usage 
+```yaml
+  name: scheduled-context
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+    
+  jobs:
+    scheduled-context:
+      uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@main
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| base-branch | Repo default branch | string | main | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | true |
+
+
+
+
+
+
+## Scheduled Readme
+
+Scheduled update of readme.md
+
+### Usage 
+```yaml
+  name: scheduled-readme
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+    
+  jobs:
+    scheduled-readme:
+      uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@main
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| base-branch | Repo default branch | string | main | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | true |
 
 
 
