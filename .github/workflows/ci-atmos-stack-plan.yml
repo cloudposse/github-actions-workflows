@@ -27,21 +27,15 @@ on:
         description: The component name.
         required: true
         type: string
+      environment:
+        description: Environment.
+        required: true
+        type: string
 jobs:
   plan:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
     steps:
-      - name: Get Atmos Setting for Secret ARN
-        uses: cloudposse/github-action-atmos-get-setting@main
-        id: secrets-arn
-        with:
-          component: ${{ inputs.component }}
-          stack: ${{ inputs.stack }}
-          settings-path: akamai.secrets-arn
-
-      # This is just to show that the output is available. This will be the value passed to the
-      # https://github.com/aws-actions/aws-secretsmanager-get-secrets action `secrets-ids` input.
-      - run: echo ${steps.secrets-arn.outputs.value}
-
       # This is just to mock calling terraform plan. In reality, this would be a call to `atmos terraform plan`
       - run: echo "atmos terraform plan ${{inputs.component}} -s ${{inputs.stack}}"
