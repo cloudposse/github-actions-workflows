@@ -38,14 +38,11 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       has-affected-stacks: ${{ steps.matrix.outputs.matrix!='{"include":[]}'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: hashicorp/setup-terraform@v2
-      - uses: cloudposse/github-action-setup-atmos@v1.0.0
       - id: affected
         uses: cloudposse/github-action-atmos-affected-stacks@0.0.1
         with:
-          install-atmos: false
-          install-terraform: false
+          install-atmos: true
+          install-terraform: true
           head-ref: ${{ inputs.head-ref }}
       - id: matrix
         run: |
