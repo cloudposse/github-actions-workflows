@@ -19,34 +19,14 @@ name: |-
 on:
   workflow_call:
     inputs:
-      dir:
-        description: Directory with applications
+      stacks:
+        description: Stacks
         required: false
         type: string
-    outputs:
-      stacks:
-        description: "Affected stacks"
-        value: ${{ jobs.get-affected-property-stacks.outputs.matrix }}
-      has-affected-stacks:
-        description: "Has affected stacks"
-        value: ${{ jobs.get-affected-property-stacks.outputs.has-affected-stacks }}
 
 jobs:
   get-affected-property-stacks:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      has-affected-stacks: ${{ steps.matrix.outputs.matrix!='{"include":[]}'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: hashicorp/setup-terraform@v2
-      - uses: cloudposse/github-action-setup-atmos@v1.0.0
-      - id: affected
-        uses: cloudposse/github-action-atmos-affected-stacks@0.0.1
-        with:
-          install-atmos: false
-          install-terraform: false
-      - id: matrix
-        run: |
-          matrix=$(echo ${{ steps.affected.outputs.affected }} | jq -c '{include:[.[]]}')
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+      - run: |
+          echo "matrix=test" >> $GITHUB_OUTPUT
