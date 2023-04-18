@@ -19,10 +19,10 @@ name: |-
 on:
   workflow_call:
     inputs:
-      dir:
-        description: Directory with applications
-        required: false
+      head-ref:
+        description: The head ref to checkout. If not provided, the head default branch is used.
         type: string
+        required: false
     outputs:
       stacks:
         description: "Affected stacks"
@@ -46,6 +46,7 @@ jobs:
         with:
           install-atmos: false
           install-terraform: false
+          head-ref: ${{ inputs.head-ref }}
       - id: matrix
         run: |
           matrix=$(echo ${{ steps.affected.outputs.affected }} | jq -c '{include:[.[]]}')
