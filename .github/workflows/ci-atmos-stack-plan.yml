@@ -34,8 +34,6 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.environment }}
     steps:
       # This is just to mock calling terraform plan. In reality, this would be a call to `atmos terraform plan`
       - run: echo "atmos terraform plan ${{inputs.component}} -s ${{inputs.stack}}"
