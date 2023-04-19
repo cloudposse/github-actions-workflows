@@ -27,10 +27,6 @@ on:
         description: The component name.
         required: true
         type: string
-      environment:
-        description: Environment.
-        required: true
-        type: string
 jobs:
   plan:
     runs-on: ubuntu-latest
