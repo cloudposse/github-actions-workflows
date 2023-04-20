@@ -6,9 +6,16 @@ name: |-
   ### Usage 
 
   ```yaml
-    name: Draft release
+    name: release-branch
     on:
-      workflow_call:
+      push:
+        branches:
+          - main
+          - release/**
+    
+    permissions:
+      contents: write
+      id-token: write
 
     jobs:
       release:
