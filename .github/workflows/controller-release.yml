@@ -20,7 +20,12 @@ on:
   workflow_call:
     inputs:
       ref:
-        description: "The release target, i.e. branch or commit it should point to"
+        description: "The release target, i.e. branch to release from"
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      sha:
+        description: "The release target sha"
         required: false
         default: ${{ github.sha }}
         type: string
@@ -46,7 +51,7 @@ jobs:
         id: get-pull-request
         uses: 8BitJonny/gh-get-current-pr@2.2.0
         with:
-          sha: ${{ inputs.ref }}
+          sha: ${{ inputs.sha }}
 
       - name: Do release
         uses: release-drafter/release-drafter@v5
