@@ -72,5 +72,4 @@ jobs:
 
       - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
         if: steps.release.outputs.id == ''
-        shell: bash
         run: exit 1
