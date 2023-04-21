@@ -71,7 +71,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
-        needs: [ release ]
-        if: needs.release.outputs.id == ''
+        if: steps.release.outputs.id == ''
         shell: bash
         run: exit 1
