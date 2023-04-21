@@ -72,4 +72,4 @@ jobs:
 
       - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
         shell: bash
-        run: [ -z "${{ steps.release.outputs.id }}" ]
+        run: "! test -z ${{ steps.release.outputs.id }}"
