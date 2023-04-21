@@ -26,13 +26,13 @@ name: |-
 on:
   workflow_call:
     inputs:
-      ref:
+      ref_name:
         description: "The release target, i.e. branch to release from"
         required: false
         default: ${{ github.ref_name }}
         type: string
       sha:
-        description: "The release target sha"
+        description: "Pull request merge commit sha"
         required: false
         default: ${{ github.sha }}
         type: string
@@ -65,6 +65,6 @@ jobs:
         with:
           publish: ${{ !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
           config-name: ${{ inputs.config-name }}
-          commitish: ${{ inputs.ref }}
+          commitish: ${{ inputs.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
