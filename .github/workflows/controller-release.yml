@@ -61,6 +61,7 @@ jobs:
           sha: ${{ inputs.sha }}
 
       - name: Do release
+        id: release
         uses: release-drafter/release-drafter@v5
         with:
           publish: ${{ !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
@@ -68,3 +69,8 @@ jobs:
           commitish: ${{ inputs.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
+        shell: bash
+        run: |
+          echo ${{ steps.release.outputs.id }}
