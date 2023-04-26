@@ -63,6 +63,20 @@ on:
         required: false
         type: string
         default: "{}"
+      toolchain:
+        description: "Toolchain ('helm', 'helmfile')"
+        required: false
+        default: "helmfile"
+        type: string
+      path:
+        description: "The path where lives the helmfile or helm chart."
+        required: true
+        type: string
+      values_file:
+        type: string
+        description: Helmfile values file, or helm chart values file
+        default: ""
+        required: false
       exclusive:
         description: "Deactivate previous GitHub deployments"
         required: false
