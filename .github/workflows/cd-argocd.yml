@@ -100,7 +100,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.4.1
+        uses: cloudposse/github-action-deploy-argocd@0.5.0
         id: deploy
         with:
           toolchain: helmfile
