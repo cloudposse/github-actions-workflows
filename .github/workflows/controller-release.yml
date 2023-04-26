@@ -37,7 +37,6 @@ on:
     secrets:
       github_access_token:
         description: "GitHub API token"
-        default: ${{ secrets.GITHUB_TOKEN }}
         required: false
 
 jobs:
@@ -60,4 +59,4 @@ jobs:
           config-name: ${{ inputs.config-name }}
           commitish: ${{ inputs.ref }}
         env:
-          GITHUB_TOKEN: ${{ secrets.github_access_token }}
+          GITHUB_TOKEN: ${{ secrets.github_access_token || secrets.GITHUB_TOKEN }}
