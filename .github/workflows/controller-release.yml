@@ -41,6 +41,11 @@ on:
         required: false
         default: auto-release.yml
         type: string
+      publish:
+        description: "Publish github release if true and no-release PR label is not set."
+        required: false
+        default: true
+        type: boolean
       runs-on:
         description: "Overrides job runs-on setting (json-encoded list)"
         type: string
@@ -64,7 +69,7 @@ jobs:
         id: release
         uses: release-drafter/release-drafter@v5
         with:
-          publish: ${{ !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
+          publish: ${{ inputs.publish && !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
           config-name: ${{ inputs.config-name }}
           commitish: ${{ inputs.ref_name }}
         env:
