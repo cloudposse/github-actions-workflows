@@ -1,0 +1,43 @@
+name: |-
+  Controller - Managing Release Branches and Tags
+  
+  Manages long-living release branches and their releases
+
+  ### Usage 
+
+  ```yaml
+    name: release
+    on:
+      release:
+        types:
+          - published
+    
+    permissions:
+      contents: write
+      id-token: write
+    
+    jobs:
+      terraform-module:
+        uses: cloudposse/github-actions-workflows/.github/workflows/controller-release-branches.yml@main
+
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+jobs:
+  major-release-tagger:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - uses: cloudposse/github-action-major-release-tagger@v1
+
+  release-branch-manager:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - uses: cloudposse/github-action-release-branch-manager@v1

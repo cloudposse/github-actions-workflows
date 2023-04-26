@@ -6,9 +6,16 @@ name: |-
   ### Usage 
 
   ```yaml
-    name: Draft release
+    name: release-branch
     on:
-      workflow_call:
+      push:
+        branches:
+          - main
+          - release/**
+    
+    permissions:
+      contents: write
+      id-token: write
 
     jobs:
       release:
@@ -19,8 +26,13 @@ name: |-
 on:
   workflow_call:
     inputs:
-      ref:
-        description: "The release target, i.e. branch or commit it should point to"
+      ref_name:
+        description: "The release target, i.e. branch to release from"
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      sha:
+        description: "Pull request merge commit sha"
         required: false
         default: ${{ github.sha }}
         type: string
@@ -29,6 +41,11 @@ on:
         required: false
         default: auto-release.yml
         type: string
+      publish:
+        description: "Publish github release if true and no-release PR label is not set."
+        required: false
+        default: true
+        type: boolean
       runs-on:
         description: "Overrides job runs-on setting (json-encoded list)"
         type: string
@@ -46,13 +63,20 @@ jobs:
         id: get-pull-request
         uses: 8BitJonny/gh-get-current-pr@2.2.0
         with:
-          sha: ${{ inputs.ref }}
+          sha: ${{ inputs.sha }}
 
       - name: Do release
+        id: release
         uses: release-drafter/release-drafter@v5
         with:
-          publish: ${{ !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
+          publish: ${{ inputs.publish && !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
           config-name: ${{ inputs.config-name }}
-          commitish: ${{ inputs.ref }}
+          commitish: ${{ inputs.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
+        shell: bash
+        run: |
+          echo 'Checking release id not empty: "${{ steps.release.outputs.id }}"'
+          ! test -z "${{ steps.release.outputs.id }}"
