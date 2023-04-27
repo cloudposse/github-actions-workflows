@@ -51,6 +51,10 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: false
 
 jobs:
   release:
@@ -73,7 +77,7 @@ jobs:
           config-name: ${{ inputs.config-name }}
           commitish: ${{ inputs.ref_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.github_access_token || secrets.GITHUB_TOKEN }}
 
       - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
         shell: bash
