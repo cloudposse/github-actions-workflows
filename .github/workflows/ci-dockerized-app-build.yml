@@ -34,6 +34,11 @@ on:
         description: "Repository name (ex. example for repo acme/example)"
         required: true
         type: string
+      tests_enabled:
+        description: "Enable CI Test Stage"
+        type: boolean
+        default: true
+        required: false
     secrets:
       ecr-region:
         description: "ECR AWS region"
@@ -94,6 +99,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    if: ${{ inputs.tests_enabled }}
     needs: [ build ]
     steps:
       - name: Checkout

@@ -63,6 +63,20 @@ on:
         required: false
         type: string
         default: "{}"
+      toolchain:
+        description: "Toolchain ('helm', 'helmfile')"
+        required: false
+        default: "helmfile"
+        type: string
+      path:
+        description: "The path where lives the helmfile or helm chart."
+        required: true
+        type: string
+      values_file:
+        type: string
+        description: Helmfile values file, or helm chart values file
+        default: ""
+        required: false
       exclusive:
         description: "Deactivate previous GitHub deployments"
         required: false
@@ -160,12 +174,13 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.4.1
+        uses: cloudposse/github-action-deploy-argocd@0.5.0
         id: deploy
         with:
-          toolchain: helmfile
+          toolchain: ${{ inputs.toolchain }}
           synchronously: ${{ inputs.synchronously }}
-          path: ./deploy/helmfile.yaml
+          path: ${{ inputs.path }}
+          values_file: ${{ format(inputs.values_file, steps.environment.outputs.name) }}
           application: ${{ inputs.repository }}
           ssm-path: ${{ steps.environment.outputs.ssm-path }}
           aws-region: ${{ steps.environment.outputs.region }}
@@ -226,14 +241,15 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Destroy
-        uses: cloudposse/github-action-deploy-argocd@0.4.1
+        uses: cloudposse/github-action-deploy-argocd@0.5.0
         if: ${{ steps.deployment.outputs.id != '' }}
         id: deploy
         with:
-          toolchain: helmfile
+          toolchain: ${{ inputs.toolchain }}
           synchronously: ${{ inputs.synchronously }}
-          path: ./deploy/helmfile.yaml
+          path: ${{ inputs.path }}
           application: ${{ inputs.repository }}
+          values_file: ${{ format(inputs.values_file, steps.environment.outputs.name) }}
           ssm-path: ${{ steps.environment.outputs.ssm-path }}
           aws-region: ${{ steps.environment.outputs.region }}
           cluster: ${{ steps.environment.outputs.cluster }}

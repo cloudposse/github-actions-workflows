@@ -38,7 +38,7 @@ on:
       organization:
         description: "Repository owner organization (ex. acme for repo acme/example)"
         required: true
-        type: string        
+        type: string
       repository:
         description: "Repository name (ex. example for repo acme/example)"
         required: true
@@ -51,6 +51,20 @@ on:
         type: boolean
         description: "Wait until ArgoCD successfully apply the changes"
         default: false
+      toolchain:
+        description: "Toolchain ('helm', 'helmfile')"
+        required: false
+        default: "helmfile"
+        type: string
+      path:
+        description: "The path where lives the helmfile or helm chart."
+        required: true
+        type: string
+      values_file:
+        type: string
+        description: Helmfile values file
+        default: ''
+        required: false
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -100,12 +114,12 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.4.1
+        uses: cloudposse/github-action-deploy-argocd@0.5.0
         id: deploy
         with:
-          toolchain: helmfile
-          synchronously: ${{ inputs.synchronously }}
-          path: ./deploy/helmfile.yaml
+          toolchain: ${{ inputs.toolchain }}
+          path: ${{ inputs.path }}
+          values_file: ${{ format(inputs.values_file, steps.environment.outputs.name) }}
           application: ${{ inputs.repository }}
           ssm-path: ${{ steps.environment.outputs.ssm-path }}
           aws-region: ${{ steps.environment.outputs.region }}
