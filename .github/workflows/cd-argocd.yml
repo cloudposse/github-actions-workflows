@@ -130,3 +130,5 @@ jobs:
           image-tag: ${{ inputs.tag }}
           operation: deploy
           github-pat: ${{ secrets.github-private-actions-pat }}
+          repository: ${{ inputs.organization }}/${{ inputs.repository }}
+          ref: ${{ github.sha }}
