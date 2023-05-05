@@ -104,7 +104,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
       - name: Deploy
@@ -119,3 +119,7 @@ jobs:
           cluster: ${{ steps.environment.outputs.cluster }}
           application: ${{ steps.environment.outputs.name }}
           taskdef-path: ./deploy/taskdef.json
+        env:
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
