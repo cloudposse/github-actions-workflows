@@ -154,7 +154,7 @@ jobs:
           implementation_path: 'ecspresso-environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: ${{ inputs.environment }}
+          environment: ${{ matrix.env }}
           namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
           application: ${{ inputs.app }}
