@@ -1,30 +1,37 @@
 name: |-
-  CD - Deploy to ECS with Spacelift
+  CD - Deploy to ECS QA/Preview envs with Ecspresso
   
-  Deploy Docker image to ECS with Spacelift
+  Deploy Docker image to ECS QA/Preview envs with Ecspresso
   
   ### Usage 
   
   ```yaml
-    name: Deploy
+    name: Feature Branch
     on:
-      push:
-        branches: [ main ]
+      pull_request:
+        branches: [ 'master' ]
+        types: [opened, synchronize, reopened, closed, labeled, unlabeled]
   
     jobs:
       cd:
-        uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecs.yml@main
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecspresso.yml@main
+        if: $\{\{ always() \}\}
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
           repository: $\{\{ github.event.repository.name \}\}
-          environment: dev
-          spacelift-organization: $\{\{ inputs.spacelift-organization \}\}
+          open: $\{\{ github.event.pull_request.state == 'open' \}\}
+          labels: $\{\{ toJSON(github.event.pull_request.labels.*.name) \}\}
+          ref: $\{\{ github.event.pull_request.head.ref \}\}
+          exclusive: true
+          env-label: |
+            qa1: deploy/qa1
+            qa2: deploy/qa2
+            qa3: deploy/qa3
+            qa4: deploy/qa4
         secrets:
-          secret-outputs-passphrase: "$\{\{ secrets.secret-outputs-passphrase \}\}"
-          github-private-actions-pat: "$\{\{ secrets.github-private-actions-pat \}\}"
-          spacelift-api-key-id: "$\{\{ secrets.spacelift-api-key-id \}\}"
-          spacelift-api-key-secret: "$\{\{ secrets.spacelift-api-key-secret \}\}"
+          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
   ```
 
 on:
@@ -46,14 +53,29 @@ on:
         description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
         type: string
-      environment:
-        description: "Environment name deploy to"
-        type: string
+      ref:
+        description: "The fully-formed ref of the branch or tag that triggered the workflow run"
         required: true
-      spacelift-organization:
-        description: "Spacelift organization name"
         type: string
+      open:
+        description: "Pull Request open/close state. Set true if opened"
         required: true
+        type: boolean
+      labels:
+        description: "Pull Request labels"
+        required: false
+        type: string
+        default: "{}"
+      exclusive:
+        description: "Deactivate previous GitHub deployments"
+        required: false
+        type: boolean
+        default: true
+      env-label:
+        description: "YAML formatted {environment}: {label} map"
+        type: string
+        default: |
+          preview: deploy
       matrix-step-name:
         description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
@@ -69,23 +91,41 @@ on:
       github-private-actions-pat:
         description: "Github PAT allow to pull private repos"
         required: true
-      spacelift-api-key-id:
-        description: "Spacelift API Key ID"
-        required: true
-      spacelift-api-key-secret:
-        description: "Spacelift API Key Secret"
-        required: true
 
 permissions:
+  pull-requests: write
+  deployments: write
   id-token: write
   contents: read
 
 jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preview deployments controller
+        uses: cloudposse/github-action-preview-environment-controller@0.9.0
+        id: controller
+        with:
+          labels: ${{ inputs.labels }}
+          open: ${{ inputs.open }}
+          env-label: ${{ inputs.env-label }}
+
+    outputs:
+      namespace: ${{ inputs.ref }}
+      labels_env: ${{ steps.controller.outputs.labels_env }}
+      deploy_envs: ${{ steps.controller.outputs.deploy_envs }}
+      destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
+
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ needs.preview.outputs.deploy_envs != '[]'  }}
+    strategy:
+      matrix:
+        env: ${{ fromJson(needs.preview.outputs.deploy_envs) }}
     environment:
-      name: ${{ inputs.environment }}
+      name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
+    needs: [ preview ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
@@ -93,6 +133,15 @@ jobs:
           secret: ${{ secrets.secret-outputs-passphrase }}
           op: decode
           in: ${{ inputs.image }}
+
+      - name: Deactive environment
+        uses: bobheadxi/deployments@v1
+        if: ${{ inputs.exclusive }}
+        with:
+          step: deactivate-env
+          token: ${{ github.token }}
+          env: ${{ matrix.env }}
+          desc: Environment purged
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -102,7 +151,7 @@ jobs:
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'ecs-environments'
+          implementation_path: 'ecspresso-environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ inputs.environment }}
@@ -114,22 +163,59 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecs@0.1.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.1.0
         id: deploy
         with:
-          stack: ${{ steps.environment.outputs.cluster }}
-          region: ${{ steps.environment.outputs.region }}
-          ssm-path: ${{ steps.environment.outputs.ssm-path }}
-          namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
           operation: deploy
           debug: false
-          github_token: ${{ secrets.github-private-actions-pat }}
-          organization: ${{ inputs.spacelift-organization }}
-          api_key_id: ${{ secrets.spacelift-api-key-id }}
-          api_key_secret: ${{ secrets.spacelift-api-key-secret }}
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ./deploy/taskdef.json
+        env:
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: ${{ needs.preview.outputs.destroy_envs != '[]'  }}
+    strategy:
+      matrix:
+        env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
+    permissions:
+      pull-requests: write
+      deployments: write
+      id-token: write
+      contents: read
+    needs: [ preview ]
+    steps:
+      - name: Seek deployment
+        uses: cloudposse/github-action-seek-deployment@0.1.0
+        id: deployment
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ matrix.env }}
+          ref: ${{ inputs.ref }}
+          status: success
+
+      - name: Inactivate deployment
+        uses: chrnorm/deployment-status@v2.0.0
+        if: ${{ steps.deployment.outputs.id != '' }}
+        with:
+          state: inactive
+          token: ${{ github.token }}
+          deployment-id: ${{ steps.deployment.outputs.id }}
+
+      - name: Cleanup label
+        uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
+        if: ${{ ! inputs.open }}
+        with:
+          labels_env: ${{ needs.preview.outputs.labels_env }}
+          env: ${{ matrix.env }}
