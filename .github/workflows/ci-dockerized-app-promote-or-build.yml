@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
+        uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
@@ -113,7 +113,7 @@ jobs:
       - name: Build
         if: ${{ inputs.force-build || steps.promote.outcome == 'failure' }}
         id: build
-        uses: cloudposse/github-action-docker-build-push@1.6.0
+        uses: cloudposse/github-action-docker-build-push@1.10.0
         with:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}/${{ inputs.app }}
@@ -165,7 +165,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
+        uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}

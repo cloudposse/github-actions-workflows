@@ -1,0 +1,49 @@
+name: |-
+  Controller - Atmos affected stacks
+  
+  Get stacks affected in the commit
+
+  ### Usage 
+
+  ```yaml
+    name: Stacks affected
+    on:
+      push:
+        branches: [ main ]
+  
+    jobs:
+      do:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-atmos-affected-stacks.yml@main
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      head-ref:
+        description: The head ref to checkout. If not provided, the head default branch is used.
+        type: string
+        required: false
+    outputs:
+      stacks:
+        description: "Affected stacks"
+        value: ${{ jobs.get-affected-property-stacks.outputs.matrix }}
+      has-affected-stacks:
+        description: "Has affected stacks"
+        value: ${{ jobs.get-affected-property-stacks.outputs.has-affected-stacks }}
+
+jobs:
+  get-affected-property-stacks:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has-affected-stacks: ${{ steps.matrix.outputs.matrix!='{"include":[]}'}}
+    steps:
+      - uses: actions/checkout@v3
+      - id: affected
+        uses: cloudposse/github-action-atmos-affected-stacks@0.0.1
+        with:
+          head-ref: ${{ inputs.head-ref }}
+      - id: matrix
+        run: |
+          matrix=$(echo ${{ steps.affected.outputs.affected }} | jq -c '{include:[.[]]}')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT

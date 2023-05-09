@@ -85,14 +85,14 @@ jobs:
           repository: ${{ inputs.repository }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1.7.0
+        uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.role }}
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.2.2
+        uses: cloudposse/github-action-deploy-helmfile@0.3.0
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}

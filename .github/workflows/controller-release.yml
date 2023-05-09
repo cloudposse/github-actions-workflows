@@ -1,0 +1,86 @@
+name: |-
+  Controller - Release
+  
+  Create a github release
+
+  ### Usage 
+
+  ```yaml
+    name: release-branch
+    on:
+      push:
+        branches:
+          - main
+          - release/**
+    
+    permissions:
+      contents: write
+      id-token: write
+
+    jobs:
+      release:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      ref_name:
+        description: "The release target, i.e. branch to release from"
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      sha:
+        description: "Pull request merge commit sha"
+        required: false
+        default: ${{ github.sha }}
+        type: string
+      config-name:
+        description: "Name of the release drafter config file"
+        required: false
+        default: auto-release.yml
+        type: string
+      publish:
+        description: "Publish github release if true and no-release PR label is not set."
+        required: false
+        default: true
+        type: boolean
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+    secrets:
+      github_access_token:
+        description: "GitHub API token"
+        required: false
+
+jobs:
+  release:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Fetch pull request for the given ref
+        id: get-pull-request
+        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        with:
+          sha: ${{ inputs.sha }}
+
+      - name: Do release
+        id: release
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: ${{ inputs.publish && !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
+          config-name: ${{ inputs.config-name }}
+          commitish: ${{ inputs.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_access_token || secrets.GITHUB_TOKEN }}
+
+      - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
+        shell: bash
+        run: |
+          echo 'Checking release id not empty: "${{ steps.release.outputs.id }}"'
+          ! test -z "${{ steps.release.outputs.id }}"

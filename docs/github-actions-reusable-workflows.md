@@ -3,19 +3,82 @@
 
 | Name | Description |
 |------|-------------|
+| [CD - Deploy to EKS with ArgoCD and Helmfile](#cd---deploy-to-eks-with-argocd-and-helmfile) | Deploy Docker image to EKS with ArgoCD and Helmfile |
 | [CD - Deploy to ECS with Spacelift](#cd---deploy-to-ecs-with-spacelift) | Deploy Docker image to ECS with Spacelift |
 | [CD - Deploy to EKS with Helmfile](#cd---deploy-to-eks-with-helmfile) | Deploy Docker image to EKS with Helmfile |
+| [CD - Deploy to EKS Preview envs with Helmfile](#cd---deploy-to-eks-preview-envs-with-helmfile) | Deploy Docker image to ECS Preview envs with Helmfile |
 | [CD - Deploy to ECS QA/Preview envs with Spacelift](#cd---deploy-to-ecs-qapreview-envs-with-spacelift) | Deploy Docker image to ECS QA/Preview envs with Spacelift |
 | [CD - Deploy to EKS Preview envs with Helmfile](#cd---deploy-to-eks-preview-envs-with-helmfile) | Deploy Docker image to ECS Preview envs with Helmfile |
+| [CI - Codeowners](#ci---codeowners) | Validate CODEOWNERS and suggest changes |
 | [CI - Build Docker image](#ci---build-docker-image) | Build Docker image and push it to ECR |
 | [CI - Promote or build Docker image](#ci---promote-or-build-docker-image) | Promote or build Docker image and push it to ECR |
 | [CI - Promote Docker image ](#ci---promote-docker-image) | Promote Docker image to specific version tag and push it to ECR |
 | [CI - Verify Docker image exists](#ci---verify-docker-image-exists) | Verify Docker image exists on ECR |
+| [CI - Readme](#ci---readme) | Validate README.yaml, README.md and suggest changes |
+| [CI - Terraform ChatOps](#ci---terraform-chatops) | Trigger terraform tests using ChatOps |
+| [CI - Terraform](#ci---terraform) | Lint, format and validate terraform code |
+| [CI - Check dist Directory](#ci---check-dist-directory) | This workflow helps ensure that generated contents of the `dist` directory matches the output of the `yarn build` |
 | [Controller - Draft release](#controller---draft-release) | Create or update draft release |
 | [Controller - Reingtegrate hotfix branch](#controller---reingtegrate-hotfix-branch) | Create PR into `target\_branch` to reintegrate hotfix from current branch  |
 | [Controller - Create Release branch](#controller---create-release-branch) | Create `release/{version}` branch for the release  |
 | [Controller - Create hotfix release](#controller---create-hotfix-release) | Create next patch version release  |
+| [Controller - Labels](#controller---labels) | Label a pull request with one or more labels |
 | [Controller - Monorepo Controller](#controller---monorepo-controller) | Mocked monorepo controller that outputs list of applications, lists of apps with and without changes. |
+| [Controller - Release](#controller---release) | Create a github release |
+| [Scheduled Context](#scheduled-context) | Scheduled update of context.tf and related docs |
+| [Scheduled Readme](#scheduled-readme) | Scheduled update of readme.md |
+
+
+
+
+## CD - Deploy to EKS with ArgoCD and Helmfile
+
+Deploy Docker image to EKS with ArgoCD and Helmfile
+
+### Usage 
+
+```yaml
+  name: Deploy
+  on:
+    push:
+      branches: [ main ]
+
+  jobs:
+    cd:
+      uses: cloudposse/github-actions-workflows/.github/workflows/cd-argocd.yml@main
+      with:
+        image: registry.hub.docker.com/library/nginx
+        tag: latest
+        repository: ${{ github.event.repository.name }}
+        environment: dev
+      secrets:
+        secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+        github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| environment | Environment name deploy to | string | N/A | true |
+| image | Docker Image to deploy | string | N/A | true |
+| organization | Repository owner organization (ex. acme for repo acme/example) | string | N/A | true |
+| repository | Repository name (ex. example for repo acme/example) | string | N/A | true |
+| synchronously | Wait until ArgoCD successfully apply the changes | boolean | false | false |
+| tag | Docker Image tag to deploy | string | N/A | true |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github-private-actions-pat | Github PAT allow to pull private repos | true |
+| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
+
+
 
 
 
@@ -113,6 +176,69 @@ Deploy Docker image to EKS with Helmfile
 | environment | Environment name deploy to | string | N/A | true |
 | image | Docker Image to deploy | string | N/A | true |
 | repository | Repository name (ex. example for repo acme/example) | string | N/A | true |
+| tag | Docker Image tag to deploy | string | N/A | true |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github-private-actions-pat | Github PAT allow to pull private repos | true |
+| secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
+
+
+
+
+
+
+## CD - Deploy to EKS Preview envs with Helmfile
+
+Deploy Docker image to ECS Preview envs with Helmfile
+
+### Usage 
+
+```yaml
+  name: Feature Branch
+  on:
+    pull_request:
+      branches: [ 'master' ]
+      types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+  jobs:
+    cd:
+      uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-helmfile.yml@main
+      if: ${{ always() }}
+      with:
+        image: registry.hub.docker.com/library/nginx
+        tag: latest
+        repository: ${{ github.event.repository.name }}
+        open: ${{ github.event.pull_request.state == 'open' }}
+        labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        exclusive: false
+        env-label: |
+          preview: deploy
+      secrets:
+        secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+        github-private-actions-pat: ${{ secrets.github-private-actions-pat }}
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| env-label | YAML formatted {environment}: {label} map | string | preview: deploy<br> | false |
+| exclusive | Deactivate previous GitHub deployments | boolean | true | false |
+| image | Docker Image to deploy | string | N/A | true |
+| labels | Pull Request labels | string | {} | false |
+| open | Pull Request open/close state. Set true if opened | boolean | N/A | true |
+| organization | Repository owner organization (ex. acme for repo acme/example) | string | N/A | true |
+| ref | The fully-formed ref of the branch or tag that triggered the workflow run | string | N/A | true |
+| repository | Repository name (ex. example for repo acme/example) | string | N/A | true |
+| synchronously | Wait until ArgoCD successfully apply the changes | boolean | false | false |
 | tag | Docker Image tag to deploy | string | N/A | true |
 
 
@@ -257,6 +383,45 @@ Deploy Docker image to ECS Preview envs with Helmfile
 |------|-------------|----------|
 | github-private-actions-pat | Github PAT allow to pull private repos | true |
 | secret-outputs-passphrase | Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs) | true |
+
+
+
+
+
+
+## CI - Codeowners
+
+Validate CODEOWNERS and suggest changes
+
+### Usage 
+```yaml
+  name: Validate CODEOWNERS
+  on:
+    workflow_call:
+    
+  jobs:
+    ci-codeowners:
+      uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@main
+      with:
+        is_fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| is\_fork | Run workflow in fork mode (decreased permissions and features) | boolean | N/A | true |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | false |
 
 
 
@@ -502,6 +667,169 @@ Verify Docker image exists on ECR
 
 
 
+## CI - Readme
+
+Validate README.yaml, README.md and suggest changes
+
+### Usage 
+```yaml
+  name: Validate Readme
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+    
+  jobs:
+    ci-readme:
+      uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
+      with:
+        suggestions: true
+        filter-mode: diff_context
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| filter-mode | Reviewdog filter mode | string | N/A | true |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+| suggestions | Enable Reviewdog suggestions (pull request only) | boolean | N/A | true |
+
+
+
+
+
+
+
+
+## CI - Terraform ChatOps
+
+Trigger terraform tests using ChatOps
+
+### Usage 
+```yaml
+  name: Terraform ChatOps
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+
+  jobs:
+    ci-terraform-chatops:
+      uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform-chatops.yml@main
+      secrets:
+        github_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | true |
+
+
+
+
+
+
+## CI - Terraform
+
+Lint, format and validate terraform code
+
+### Usage 
+```yaml
+  name: Validate Terraform
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+
+  jobs:
+    ci-terraform:
+      uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
+      with:
+        suggestions: true
+        filter-mode: diff_context
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| filter-mode | Reviewdog filter mode | string | N/A | true |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+| suggestions | Enable Reviewdog suggestions (pull request only) | boolean | N/A | true |
+
+
+
+
+
+
+
+
+## CI - Check dist Directory
+
+This workflow helps ensure that generated contents of the `dist` directory matches the output of the `yarn build`
+command. The `dist` directory has special meaning in GitHub Actions in that it that contains the runnable JS files. 
+
+In Cloud Posse's TypeScript actions, the `dist` directory is generated through a build process from the TypeScript 
+source files by running the `yarn build` command.
+
+
+### Usage 
+
+```yaml
+  name: Build
+  on:
+    push:
+      branches: [ main ]
+
+  jobs:
+    check-dist:
+      uses: cloudposse/github-actions-workflows/.github/workflows/ci-typescript-app-check-dist.yml@main
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| commit-message | Optional input to set a commit message. If it's not set, it defaults to 'Update the contents of dist directory' | string | Update contents of the dist directory | false |
+| dist-path | Optional input to set a path to the dist folder. If it's not set, it defaults to './dist' | string | ./dist | false |
+| node-caching | Optional input to set up caching for the setup-node action. The input syntax corresponds to the setup-node's one. Set to an empty string if caching isn't needed | string | yarn | false |
+| node-version | Optional input to set the version of Node.js used to build a project. The input syntax corresponds to the setup-node's one | string | 16.x | false |
+
+
+
+
+
+
+
+
 ## Controller - Draft release
 
 Create or update draft release
@@ -661,6 +989,40 @@ Create next patch version release
 
 
 
+## Controller - Labels
+
+Label a pull request with one or more labels
+
+### Usage 
+
+```yaml
+  name: Label pull request
+  on:
+    workflow_call:
+
+  jobs:
+    label:
+      uses:  cloudposse/github-actions-workflows/.github/workflows/controller-labels.yml@main
+      with:
+        labels: ['ready-for-review']
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| labels | The labels' name to be added. Must be separated with line breaks if there are multiple labels. | string | N/A | true |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+
+
+
+
+
 ## Controller - Monorepo Controller
 
 Mocked monorepo controller that outputs list of applications, lists of apps with and without changes.
@@ -699,6 +1061,124 @@ Mocked monorepo controller that outputs list of applications, lists of apps with
 | apps | Applications |
 | changes | Changed applications |
 | no-changes | Unchanged applications |
+
+
+
+## Controller - Release
+
+Create a github release
+
+### Usage 
+
+```yaml
+  name: Draft release
+  on:
+    workflow_call:
+
+  jobs:
+    release:
+      uses:  cloudposse/github-actions-workflows/.github/workflows/controller-release.yml@main
+
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| config-name | Name of the release drafter config file | string | auto-release.yml | false |
+| ref | The release target, i.e. branch or commit it should point to | string | ${{ github.sha }} | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+
+
+
+
+
+## Scheduled Context
+
+Scheduled update of context.tf and related docs
+
+### Usage 
+```yaml
+  name: scheduled-context
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+    
+  jobs:
+    scheduled-context:
+      uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-context.yml@main
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| base-branch | Repo default branch | string | main | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | true |
+
+
+
+
+
+
+## Scheduled Readme
+
+Scheduled update of readme.md
+
+### Usage 
+```yaml
+  name: scheduled-readme
+  on:
+    workflow_call:
+  
+  permissions:
+    pull-requests: write
+    id-token: write
+    contents: read
+    
+  jobs:
+    scheduled-readme:
+      uses: cloudposse/github-actions-workflows/.github/workflows/scheduled-readme.yml@main
+```
+
+
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|----------|
+| base-branch | Repo default branch | string | main | false |
+| runs-on | Overrides job runs-on setting (json-encoded list) | string | ["ubuntu-latest"] | false |
+
+
+
+### Secrets
+
+| Name | Description | Required |
+|------|-------------|----------|
+| github\_access\_token | GitHub API token | true |
+
+
+
 
 
 <!-- markdownlint-restore -->

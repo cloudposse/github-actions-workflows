@@ -1,7 +1,7 @@
 name: |-
-  CD - Deploy to EKS with ArgoCD and Helmfile
+  CD - Deploy to ECS with Ecspresso
   
-  Deploy Docker image to EKS with ArgoCD and Helmfile
+  Deploy Docker image to ECS with Ecspresso
   
   ### Usage 
   
@@ -13,15 +13,18 @@ name: |-
   
     jobs:
       cd:
-        uses: cloudposse/github-actions-workflows/.github/workflows/cd-argocd.yml@main
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-ecspresso.yml@main
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
           repository: $\{\{ github.event.repository.name \}\}
           environment: dev
+          spacelift-organization: $\{\{ inputs.spacelift-organization \}\}
         secrets:
-          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
-          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
+          secret-outputs-passphrase: "$\{\{ secrets.secret-outputs-passphrase \}\}"
+          github-private-actions-pat: "$\{\{ secrets.github-private-actions-pat \}\}"
+          spacelift-api-key-id: "$\{\{ secrets.spacelift-api-key-id \}\}"
+          spacelift-api-key-secret: "$\{\{ secrets.spacelift-api-key-secret \}\}"
   ```
 
 on:
@@ -35,36 +38,26 @@ on:
         description: "Docker Image tag to deploy"
         required: true
         type: string
-      organization:
-        description: "Repository owner organization (ex. acme for repo acme/example)"
-        required: true
-        type: string
       repository:
         description: "Repository name (ex. example for repo acme/example)"
         required: true
+        type: string
+      app:
+        description: "Application name. Used with monorepo pattern when there are several applications in the repo"
+        required: false
         type: string
       environment:
         description: "Environment name deploy to"
         type: string
         required: true
-      synchronously:
-        type: boolean
-        description: "Wait until ArgoCD successfully apply the changes"
-        default: false
-      toolchain:
-        description: "Toolchain ('helm', 'helmfile')"
+      matrix-step-name:
+        description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
-        default: "helmfile"
         type: string
-      path:
-        description: "The path where lives the helmfile or helm chart."
-        required: true
-        type: string
-      values_file:
-        type: string
-        description: Helmfile values file
-        default: ''
+      matrix-key:
+        description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
+        type: string
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -99,36 +92,34 @@ jobs:
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'argocd-environments/'
+          implementation_path: 'ecspresso-environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ inputs.environment }}
           namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
+          application: ${{ inputs.app }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.5.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.1.0
         id: deploy
         with:
-          toolchain: ${{ inputs.toolchain }}
-          path: ${{ inputs.path }}
-          values_file: ${{ format(inputs.values_file, steps.environment.outputs.name) }}
-          application: ${{ inputs.repository }}
-          ssm-path: ${{ steps.environment.outputs.ssm-path }}
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
           operation: deploy
-          github-pat: ${{ secrets.github-private-actions-pat }}
-          repository: ${{ inputs.organization }}/${{ inputs.repository }}
-          ref: ${{ github.sha }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ./deploy/taskdef.json
+        env:
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec

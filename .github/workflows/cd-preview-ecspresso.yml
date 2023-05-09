@@ -1,7 +1,7 @@
 name: |-
-  CD - Deploy to EKS Preview envs with Helmfile
+  CD - Deploy to ECS QA/Preview envs with Ecspresso
   
-  Deploy Docker image to ECS Preview envs with Helmfile
+  Deploy Docker image to ECS QA/Preview envs with Ecspresso
   
   ### Usage 
   
@@ -14,7 +14,7 @@ name: |-
   
     jobs:
       cd:
-        uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-helmfile.yml@main
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecspresso.yml@main
         if: $\{\{ always() \}\}
         with:
           image: registry.hub.docker.com/library/nginx
@@ -23,9 +23,12 @@ name: |-
           open: $\{\{ github.event.pull_request.state == 'open' \}\}
           labels: $\{\{ toJSON(github.event.pull_request.labels.*.name) \}\}
           ref: $\{\{ github.event.pull_request.head.ref \}\}
-          exclusive: false
+          exclusive: true
           env-label: |
-            preview: deploy
+            qa1: deploy/qa1
+            qa2: deploy/qa2
+            qa3: deploy/qa3
+            qa4: deploy/qa4
         secrets:
           secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
           github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
@@ -42,13 +45,13 @@ on:
         description: "Docker Image tag to deploy"
         required: true
         type: string
-      organization:
-        description: "Repository owner organization (ex. acme for repo acme/example)"
-        required: true
-        type: string
       repository:
         description: "Repository name (ex. example for repo acme/example)"
         required: true
+        type: string
+      app:
+        description: "Application name. Used with monorepo pattern when there are several applications in the repo"
+        required: false
         type: string
       ref:
         description: "The fully-formed ref of the branch or tag that triggered the workflow run"
@@ -63,20 +66,6 @@ on:
         required: false
         type: string
         default: "{}"
-      toolchain:
-        description: "Toolchain ('helm', 'helmfile')"
-        required: false
-        default: "helmfile"
-        type: string
-      path:
-        description: "The path where lives the helmfile or helm chart."
-        required: true
-        type: string
-      values_file:
-        type: string
-        description: Helmfile values file, or helm chart values file
-        default: ""
-        required: false
       exclusive:
         description: "Deactivate previous GitHub deployments"
         required: false
@@ -87,10 +76,14 @@ on:
         type: string
         default: |
           preview: deploy
-      synchronously:
-        type: boolean
-        description: "Wait until ArgoCD successfully apply the changes"
-        default: false
+      matrix-step-name:
+        description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
+        required: false
+        type: string
+      matrix-key:
+        description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
+        required: false
+        type: string
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -110,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Preview deployments controller
-        uses: cloudposse/github-action-preview-environment-controller@0.8.0
+        uses: cloudposse/github-action-preview-environment-controller@0.9.0
         id: controller
         with:
           labels: ${{ inputs.labels }}
@@ -123,10 +116,8 @@ jobs:
       deploy_envs: ${{ steps.controller.outputs.deploy_envs }}
       destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
 
-
   deploy:
     runs-on: ubuntu-latest
-    needs: [ preview ]
     if: ${{ needs.preview.outputs.deploy_envs != '[]'  }}
     strategy:
       matrix:
@@ -134,6 +125,7 @@ jobs:
     environment:
       name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
+    needs: [ preview ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.0
         id: image
@@ -159,44 +151,40 @@ jobs:
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'argocd-environments/'
+          implementation_path: 'ecspresso-environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ needs.preview.outputs.namespace }}
+          namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
+          application: ${{ inputs.app }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.5.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.1.0
         id: deploy
         with:
-          toolchain: ${{ inputs.toolchain }}
-          synchronously: ${{ inputs.synchronously }}
-          path: ${{ inputs.path }}
-          values_file: ${{ format(inputs.values_file, steps.environment.outputs.name) }}
-          application: ${{ inputs.repository }}
-          ssm-path: ${{ steps.environment.outputs.ssm-path }}
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
           operation: deploy
-          github-pat: ${{ secrets.github-private-actions-pat }}
-          repository: ${{ inputs.organization }}/${{ inputs.repository }}
-          ref: ${{ github.sha }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ./deploy/taskdef.json
+        env:
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
 
-  destroy:
+  cleanup:
     runs-on: ubuntu-latest
-    needs: [ preview ]
     if: ${{ needs.preview.outputs.destroy_envs != '[]'  }}
     strategy:
       matrix:
@@ -206,10 +194,8 @@ jobs:
       deployments: write
       id-token: write
       contents: read
+    needs: [ preview ]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Seek deployment
         uses: cloudposse/github-action-seek-deployment@0.1.0
         id: deployment
@@ -218,50 +204,6 @@ jobs:
           environment: ${{ matrix.env }}
           ref: ${{ inputs.ref }}
           status: success
-
-      - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.2.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        id: environment
-        with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'argocd-environments/'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
-          environment: ${{ matrix.env }}
-          namespace: ${{ needs.preview.outputs.namespace }}
-          repository: ${{ inputs.repository }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.0.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        with:
-          aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.role }}
-          role-skip-session-tagging: true
-
-      - name: Destroy
-        uses: cloudposse/github-action-deploy-argocd@0.5.0
-        if: ${{ steps.deployment.outputs.id != '' }}
-        id: deploy
-        with:
-          toolchain: ${{ inputs.toolchain }}
-          synchronously: ${{ inputs.synchronously }}
-          path: ${{ inputs.path }}
-          application: ${{ inputs.repository }}
-          values_file: ${{ format(inputs.values_file, steps.environment.outputs.name) }}
-          ssm-path: ${{ steps.environment.outputs.ssm-path }}
-          aws-region: ${{ steps.environment.outputs.region }}
-          cluster: ${{ steps.environment.outputs.cluster }}
-          environment: ${{ steps.environment.outputs.name }}
-          namespace: ${{ steps.environment.outputs.namespace }}
-          image: "<none>"
-          image-tag: "<none>"
-          operation: destroy
-          github-pat: ${{ secrets.github-private-actions-pat }}
-          debug: false
-          repository: ${{ inputs.organization }}/${{ inputs.repository }}
-          ref: ${{ github.sha }}
 
       - name: Inactivate deployment
         uses: chrnorm/deployment-status@v2.0.0

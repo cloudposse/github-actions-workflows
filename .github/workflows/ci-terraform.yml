@@ -1,110 +1,114 @@
 name: |-
   CI - Terraform
   
-  Build Docker image and push it to ECR
+  Lint, format and validate terraform code
   
   ### Usage 
-
   ```yaml
-    name: Deploy
+    name: Validate Terraform
     on:
-      push:
-        branches: [ main ]
-
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+  
     jobs:
-      ci:
-        uses: cloudposse/github-actions-workflows/.github/workflows/ci-dockerized-app-build.yml@main
+      ci-terraform:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
         with:
-          organization: $\{\{ github.event.repository.owner.login \}\}
-          repository: $\{\{ github.event.repository.name \}\}
-        secrets:
-          ecr-region: $\{\{ secrets.ecr-region \}\}
-          ecr-iam-role: $\{\{ secrets.ecr-iam-role \}\}
-          registry: $\{\{ secrets.registry \}\}
-          secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
+          suggestions: true
+          filter-mode: diff_context
   ```
 on:
   workflow_call:
     inputs:
-      organization:
-        description: "Repository owner organization (ex. acme for repo acme/example)"
-        required: true
-        type: string
-      repository:
-        description: "Repository name (ex. example for repo acme/example)"
-        required: true
-        type: string
       suggestions:
-        description: "Repository name (ex. example for repo acme/example)"
-        required: false
+        description: "Enable Reviewdog suggestions (pull request only)"
         type: boolean
-
-    secrets:
-      ecr-region:
-        description: "ECR AWS region"
         required: true
-      ecr-iam-role:
-        description: "IAM Role ARN provide ECR write/read access"
+      filter-mode:
+        description: "Reviewdog filter mode"
+        type: string
         required: true
-      secret-outputs-passphrase:
-        description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
-        required: true
-      registry:
-        description: "ECR Docker registry"
-        required: true
-    outputs:
-      image:
-        description: "Docker Image"
-        value: ${{ jobs.build.outputs.image }}
-      tag:
-        description: "Docker image tag"
-        value: ${{ jobs.build.outputs.tag }}
-
-permissions:
-  id-token: write
-  contents: read
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
 
 jobs:
-  providers:
-    name: plugins
-    runs-on: ubuntu-latest
+  format:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-  modules:
-    name: plugins
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Terraform format
+        uses: dflook/terraform-fmt@v1
 
-  fmt:
-    name: fmt
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Reviewdog suggester
+        if: ${{ inputs.suggestions }}
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: "terraform fmt -recursive"
+          cleanup: false
+          filter_mode: ${{ inputs.filter-mode }}
 
+      - name: Status check
+        shell: bash
+        run: git diff --exit-code
+
+  lint-find-dirs:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: set-matrix
+        run: |
+          matrix=$(find ./ -name '*.tf' \
+            -not -path '*/.terraform/*' \
+            -exec dirname {} \; \
+            | sort \
+            | uniq \
+            | jq --raw-input --slurp 'split("\n")| map(select(. != ""))')
+          echo "matrix=$(echo $matrix)" >> $GITHUB_OUTPUT
     outputs:
-      image: ${{ steps.image.outputs.out }}
-      tag: ${{ steps.build.outputs.tag }}
+      tfdirs_matrix: ${{ steps.set-matrix.outputs.matrix }}
 
   lint:
-    name: lint
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    needs: lint-find-dirs
+    strategy:
+      fail-fast: false
+      matrix:
+        tfdir: ${{ fromJson(needs.lint-find-dirs.outputs.tfdirs_matrix) }}
+    env:
+      TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
+      TFLINT_PLUGINS: aws
+      TFLINT_CACHE_VER: 1 # Increment this to force a cache refresh
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    outputs:
-      image: ${{ steps.image.outputs.out }}
-      tag: ${{ steps.build.outputs.tag }}
+      - uses: hashicorp/setup-terraform@v2
 
-  test:
-    runs-on: ubuntu-latest
-    needs: [ lint, providers, modules ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - run: terraform init
+        working-directory: ${{ matrix.tfdir }}
 
+      - name: cache tflint plugins
+        id: cache-plugins
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TFLINT_PLUGIN_DIR }}
+          key: tflint-plugins-${{ env.TFLINT_CACHE_VER }}
+
+      - name: tflint
+        uses: reviewdog/action-tflint@v1.17.0
+        with:
+          reporter: ${{ inputs.suggestions && 'github-pr-review' || 'local' }}
+          fail_on_error: true
+          tflint_rulesets: ${{ env.TFLINT_PLUGINS }}
+          tflint_init: true
+          working_directory: ${{ matrix.tfdir }}
+          filter_mode: ${{ inputs.filter-mode }}

@@ -1,0 +1,77 @@
+name: |-
+  Controller - Atmos affected stacks
+  
+  Get stacks affected in the commit
+
+  ### Usage 
+
+  ```yaml
+    name: Stacks affected
+    on:
+      push:
+        branches: [ main ]
+  
+    jobs:
+      do:
+        uses:  cloudposse/github-actions-workflows/.github/workflows/controller-atmos-affected-stacks.yml@main
+  ```
+
+on:
+  workflow_call:
+    inputs:
+      stacks:
+        description: Stacks
+        required: false
+        type: string
+
+jobs:
+  create-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: finnp/create-file-action@2.0.0
+        env:
+          FILE_NAME: ./tmp/template.jsonnet
+          FILE_DATA: |-
+            local result=[
+            {
+              ['stack-' + x + '.yml']: std.manifestYamlDoc({
+              name: 'Stack ' + x,
+              on: {
+                workflow_dispatch: {},
+              },
+              permissions: {
+                deployments: 'write',
+                "id-token": 'write',
+                contents: 'read',
+              },
+              jobs: {
+                do: {
+                  uses: 'cloudposse/github-actions-workflows-atmos/.github/workflows/stack-deploy.yml@main',
+                  with: {
+                    stack: x,
+                    component: x,
+                    environment: x,
+                  },
+                  secrets: {
+                    "github-private-actions-pat": '$\{\{ secrets.PUBLIC_REPO_ACCESS_TOKEN \}\}',
+                  },
+                },
+              },
+            })
+            }
+            for x in stacks ];
+            
+            result[0]
+
+      - id: jsonnet-render
+        uses: alexdglover/jsonnet-render@v2
+        with:
+          file: ./tmp/template.jsonnet
+          output_dir: .github/workflows/
+          params: stacks=${{ inputs.stacks }}
+
+      - run: |
+          ls -l .github/workflows/
