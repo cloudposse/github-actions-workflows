@@ -93,9 +93,6 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v2
 
-      - run: terraform init
-        working-directory: ${{ matrix.tfdir }}
-
       - name: cache tflint plugins
         id: cache-plugins
         uses: actions/cache@v3
