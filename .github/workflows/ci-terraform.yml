@@ -93,6 +93,9 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v2
 
+      - run: terraform init
+        working-directory: ${{ matrix.tfdir }}
+
       - name: cache tflint plugins
         id: cache-plugins
         uses: actions/cache@v3
@@ -101,7 +104,7 @@ jobs:
           key: tflint-plugins-${{ env.TFLINT_CACHE_VER }}
 
       - name: tflint
-        uses: reviewdog/action-tflint@v1.17.0
+        uses: reviewdog/action-tflint@v1.18.0
         with:
           reporter: ${{ inputs.suggestions && 'github-pr-review' || 'local' }}
           fail_on_error: true
