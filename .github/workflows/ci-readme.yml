@@ -77,7 +77,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            README.md is outdated. Please run the following command locally and push the file.
+            README.md is outdated. Please run the following commands locally and push the file:
             ```bash
             make init 
             make readme
@@ -97,7 +97,7 @@ jobs:
         run: | 
           git diff --exit-code && success="true" || success="false"
           if [ "$success" = "false" ]; then
-            echo "README.md is outdated. Please run the following command locally and push the file:"
+            echo "README.md is outdated. Please run the following commands locally and push the file:"
             echo "  make init"
             echo "  make readme"
             exit 1
