@@ -68,10 +68,10 @@ jobs:
           git push
 
       - name: Suggest readme update for human pull requests
+        # Do not run for forks, will fail due to https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
         if: |
           steps.readme_diff.outcome == 'failure' && 
           steps.auto_commit.outcome.skipped && 
-          # Do not run for forks, will fail due to https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
           github.event.pull_request.head.repo.full_name == github.repository &&
           inputs.suggestions
         uses: thollander/actions-comment-pull-request@v2
