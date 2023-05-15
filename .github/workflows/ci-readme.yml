@@ -58,15 +58,16 @@ jobs:
         continue-on-error: true
 
       - name: Auto-commit readme for bot pull requests
+        id: auto_commit
         if: | 
           steps.readme_diff.outcome == 'failure' && 
           startsWith(github.head_ref, 'renovate/') &&
           inputs.suggestions
-        uses: actions-js/push@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          message: "Auto-update README.md"
-          branch: ${{ github.head_ref }}
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_EMAIL}"
+          git commit -m "Update README.md" -a
+          git push origin HEAD:github.head_ref
 
       - name: Status check
         shell: bash
