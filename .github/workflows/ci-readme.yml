@@ -65,9 +65,9 @@ jobs:
           inputs.suggestions
         run: |
           git commit -m "Update README.md" -a
-          git push
+          git push 
 
-      - name: Suggest readme update for human pull requests
+      - name: Suggest readme update
         # Do not run for forks, will fail due to https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
         if: |
           steps.readme_diff.outcome == 'failure' && 
@@ -84,7 +84,7 @@ jobs:
             ```
 
 # Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
-#      - name: Suggest readme update for human pull requests
+#      - name: Suggest readme update
 #        if: ${{ inputs.suggestions }}
 #        uses: reviewdog/action-suggester@v1
 #        with:
@@ -94,4 +94,12 @@ jobs:
 
       - name: Status check
         shell: bash
-        run: git diff --exit-code
+        run: | 
+          git diff --exit-code && success="true" || success="false"
+          if [ "$success" = "false" ]; then
+              echo "README.md is outdated. Please run the following command locally and push the file."
+              echo "make init"
+              echo "make readme"
+            ```
+            exit 1
+          fi
