@@ -61,12 +61,13 @@ jobs:
         id: auto_commit
         if: | 
           steps.readme_diff.outcome == 'failure' && 
-          startsWith(github.ref_name, 'renovate/')
+          startsWith(github.ref_name, 'renovate/') &&
+          inputs.suggestions
         run: |
           git commit -m "Update README.md" -a
           git push
 
-      - name: Suggest readme update
+      - name: Suggest readme update for human pull requests
         if: |
           steps.readme_diff.outcome == 'failure' && 
           steps.auto_commit.outcome.skipped && 
@@ -83,7 +84,7 @@ jobs:
             ```
 
 # Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
-#      - name: Suggest readme update
+#      - name: Suggest readme update for human pull requests
 #        if: ${{ inputs.suggestions }}
 #        uses: reviewdog/action-suggester@v1
 #        with:
