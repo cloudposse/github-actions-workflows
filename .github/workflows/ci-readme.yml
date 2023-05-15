@@ -65,7 +65,7 @@ jobs:
           inputs.suggestions
         run: |
           git commit -m "Update README.md" -a
-          git push 
+          git push
 
       - name: Status check
         shell: bash
