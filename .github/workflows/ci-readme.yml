@@ -67,7 +67,7 @@ jobs:
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_EMAIL}"
           git commit -m "Update README.md" -a
-          git push origin HEAD:github.head_ref
+          git push origin HEAD:${{github.head_ref}}
 
       - name: Status check
         shell: bash
