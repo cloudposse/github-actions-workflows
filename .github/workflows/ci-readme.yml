@@ -97,8 +97,8 @@ jobs:
         run: | 
           git diff --exit-code && success="true" || success="false"
           if [ "$success" = "false" ]; then
-            echo "README.md is outdated. Please run the following command locally and push the file."
-            echo "make init"
-            echo "make readme"
+            echo "README.md is outdated. Please run the following command locally and push the file:"
+            echo "  make init"
+            echo "  make readme"
             exit 1
           fi
