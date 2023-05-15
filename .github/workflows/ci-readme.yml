@@ -61,7 +61,7 @@ jobs:
         id: auto_commit
         if: | 
           steps.readme_diff.outcome == 'failure' && 
-          startsWith(github.ref_name, 'renovate/') &&
+          startsWith(github.head_ref, 'renovate/') &&
           inputs.suggestions
         run: |
           git commit -m "Update README.md" -a
@@ -72,8 +72,6 @@ jobs:
         run: | 
           git diff --exit-code && success="true" || success="false"
           if [ "$success" = "false" ]; then
-            echo ${{github.head_ref }}
-            echo ${{github.head_ref_name }}
             echo "README.md is outdated. Please run the following commands locally and push the file:"
             echo "  make init"
             echo "  make readme"
