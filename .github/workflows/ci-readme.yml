@@ -64,7 +64,7 @@ jobs:
         run: git diff --exit-code
         continue-on-error: true
 
-      - name: Auto-commit readme for bot pull requests
+      - name: Auto-update README.md for bot pull requests
         id: auto_commit
         if: | 
           steps.readme_diff.outcome == 'failure' && 
@@ -73,7 +73,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git commit -a -m "Update README.md"
+          git commit -a -m "Auto-update README.md"
           git push
 
       - name: Status check
