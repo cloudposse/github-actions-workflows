@@ -71,8 +71,8 @@ jobs:
           startsWith(inputs.ref, 'renovate/') &&
           inputs.suggestions
         run: |
-          git config --global user.name "github-actions-bot"
-          git config --global user.email "github-actions-bot@users.noreply.github.com"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
           git commit -a -m "Update README.md"
           git push
 
