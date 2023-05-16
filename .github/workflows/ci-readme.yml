@@ -36,7 +36,7 @@ on:
         description: "Checkout ref"
         type: string
         required: false
-        default: ${{ github.ref }}
+        default: ${{ github.ref_name }}
       repository:
         description: "Checkout repository"
         type: string
