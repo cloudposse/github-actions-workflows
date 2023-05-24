@@ -63,13 +63,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Fetch pull request for the given ref
-        id: get-pull-request
-        uses: 8BitJonny/gh-get-current-pr@2.2.0
-        with:
-          sha: ${{ inputs.sha }}
+      - name: Check duplicate
+        id: check-duplicate
+        run: |
+          latest_hash=$(git rev-parse HEAD)
+          # Check if the hash has been released before
+          if git rev-list --quiet "$latest_hash" >/dev/null 2>&1; then
+            echo "duplicate=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "duplicate=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Do release
+        if: steps.check-duplicate.outputs.duplicate == 'false'
         id: release
         uses: release-drafter/release-drafter@v5
         with:
@@ -80,6 +86,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.github_access_token || secrets.GITHUB_TOKEN }}
 
       - name: Verify release  # Workaround for https://github.com/release-drafter/release-drafter/issues/1313
+        if: steps.check-duplicate.outputs.duplicate == 'false'
         shell: bash
         run: |
           echo 'Checking release id not empty: "${{ steps.release.outputs.id }}"'
