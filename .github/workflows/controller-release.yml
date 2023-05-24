@@ -72,7 +72,7 @@ jobs:
       - name: Check duplicate
         id: check-duplicate
         run: |
-          latest_hash=$(git rev-parse HEAD)
+          latest_hash=$(git rev-parse ${{ github.ref_name }})
           # Check if the hash has been released before
           if git rev-list --quiet "$latest_hash" >/dev/null 2>&1; then
             echo "duplicate=true" >> "$GITHUB_OUTPUT"
