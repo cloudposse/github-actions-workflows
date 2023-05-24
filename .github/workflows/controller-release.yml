@@ -73,8 +73,8 @@ jobs:
         id: check-duplicate
         run: |
           latest_hash=$(git rev-parse ${{ github.ref_name }})
-          # Check if the hash has been released before
-          if git rev-list --quiet "$latest_hash" >/dev/null 2>&1; then
+          tags=$(git tag --contains "$latest_hash")
+          if [[ -n $tags ]]; then
             echo "duplicate=true" >> "$GITHUB_OUTPUT"
           else
             echo "duplicate=false" >> "$GITHUB_OUTPUT"
