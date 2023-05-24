@@ -63,6 +63,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Fetch pull request for the given ref
+        id: get-pull-request
+        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        with:
+          sha: ${{ inputs.sha }}
+
       - name: Check duplicate
         id: check-duplicate
         run: |
