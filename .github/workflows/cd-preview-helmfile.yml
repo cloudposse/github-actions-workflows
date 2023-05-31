@@ -145,7 +145,7 @@ jobs:
           repository: ${{ inputs.repository }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.0.0
+        uses: aws-actions/configure-aws-credentials@v2.1.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.cluster-role }}
@@ -204,7 +204,7 @@ jobs:
           repository: ${{ inputs.repository }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.0.0
+        uses: aws-actions/configure-aws-credentials@v2.1.0
         if: ${{ steps.deployment.outputs.id != '' }}
         with:
           aws-region: ${{ steps.environment.outputs.region }}
