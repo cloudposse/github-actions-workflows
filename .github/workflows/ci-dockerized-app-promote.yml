@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.0.0
+        uses: aws-actions/configure-aws-credentials@v2.1.0
         with:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
@@ -116,7 +116,7 @@ jobs:
           op: encode
           in: ${{ steps.promote.outputs.image }}
 
-      - uses: cloudposse/github-action-matrix-outputs-write@0.3.1
+      - uses: cloudposse/github-action-matrix-outputs-write@0.4.1
         id: outputs
         with:
           matrix-step-name: ${{ inputs.matrix-step-name }}

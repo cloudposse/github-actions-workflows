@@ -1,7 +1,7 @@
 name: |-
-  CD - Deploy to ECS QA/Preview envs with Spacelift
+  CD - Deploy to ECS QA/Preview envs with Ecspresso
   
-  Deploy Docker image to ECS QA/Preview envs with Spacelift
+  Deploy Docker image to ECS QA/Preview envs with Ecspresso
   
   ### Usage 
   
@@ -14,13 +14,12 @@ name: |-
   
     jobs:
       cd:
-        uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecs.yml@main
+        uses: cloudposse/github-actions-workflows/.github/workflows/cd-preview-ecspresso.yml@main
         if: $\{\{ always() \}\}
         with:
           image: registry.hub.docker.com/library/nginx
           tag: latest
           repository: $\{\{ github.event.repository.name \}\}
-          spacelift-organization: $\{\{ inputs.spacelift-organization \}\}
           open: $\{\{ github.event.pull_request.state == 'open' \}\}
           labels: $\{\{ toJSON(github.event.pull_request.labels.*.name) \}\}
           ref: $\{\{ github.event.pull_request.head.ref \}\}
@@ -33,8 +32,6 @@ name: |-
         secrets:
           secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
           github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
-          spacelift-api-key-id: "$\{\{ secrets.spacelift-api-key-id \}\}"
-          spacelift-api-key-secret: "$\{\{ secrets.spacelift-api-key-secret \}\}"  
   ```
 
 on:
@@ -79,10 +76,6 @@ on:
         type: string
         default: |
           preview: deploy
-      spacelift-organization:
-        description: "Spacelift organization name"
-        type: string
-        required: true
       matrix-step-name:
         description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
@@ -97,12 +90,6 @@ on:
         required: true
       github-private-actions-pat:
         description: "Github PAT allow to pull private repos"
-        required: true
-      spacelift-api-key-id:
-        description: "Spacelift API Key ID"
-        required: true
-      spacelift-api-key-secret:
-        description: "Spacelift API Key Secret"
         required: true
 
 permissions:
@@ -158,12 +145,13 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Environment Info
         uses: cloudposse/github-action-interface-environment@0.2.0
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
-          implementation_path: 'ecs-environments'
+          implementation_path: 'ecspresso-environments'
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
@@ -175,25 +163,25 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2.1.0
         with:
           aws-region: ${{ steps.environment.outputs.region }}
-          role-to-assume: ${{ steps.environment.outputs.role }}
+          role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecs@0.1.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.1.0
         id: deploy
         with:
-          stack: ${{ steps.environment.outputs.cluster }}
-          region: ${{ steps.environment.outputs.region }}
-          ssm-path: ${{ steps.environment.outputs.ssm-path }}
-          namespace: ${{ steps.environment.outputs.namespace }}
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
           operation: deploy
           debug: false
-          github_token: ${{ secrets.github-private-actions-pat }}
-          organization: ${{ inputs.spacelift-organization }}
-          api_key_id: ${{ secrets.spacelift-api-key-id }}
-          api_key_secret: ${{ secrets.spacelift-api-key-secret }}
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ./deploy/taskdef.json
+        env:
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
 
   cleanup:
     runs-on: ubuntu-latest

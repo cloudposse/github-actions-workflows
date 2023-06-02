@@ -32,6 +32,16 @@ on:
         description: "Reviewdog filter mode"
         type: string
         required: true
+      ref:
+        description: "Checkout ref"
+        type: string
+        required: false
+        default: ${{ github.ref_name }}
+      repository:
+        description: "Checkout repository"
+        type: string
+        required: false
+        default: ${{ github.repository }}
       runs-on:
         description: "Overrides job runs-on setting (json-encoded list)"
         type: string
@@ -44,6 +54,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+          repository: ${{ inputs.repository }}
 
       - name: Generate readme
         shell: bash
@@ -57,26 +70,25 @@ jobs:
         run: git diff --exit-code
         continue-on-error: true
 
-      - name: Suggest readme update
-        if: ${{ inputs.suggestions && steps.readme_diff.outcome == 'failure' }}
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: |
-            README.md is outdated. Please run the following command locally and push the file.
-            ```bash
-            make init 
-            make readme
-            ```
-
-# Use this instead of actions-comment-pull-request once the issue fixed https://github.com/community/community/discussions/9099
-#      - name: Reviewdog suggester
-#        if: ${{ inputs.suggestions }}
-#        uses: reviewdog/action-suggester@v1
-#        with:
-#          tool_name: "make init readme/build"
-#          cleanup: false
-#          filter_mode: ${{ inputs.filter-mode }}
+      - name: Auto-update README.md for bot pull requests
+        id: auto_commit
+        if: | 
+          steps.readme_diff.outcome == 'failure' && 
+          startsWith(inputs.ref, 'renovate/') &&
+          inputs.suggestions
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git commit -a -m "Auto-update README.md"
+          git push
 
       - name: Status check
         shell: bash
-        run: git diff --exit-code
+        run: | 
+          git diff --exit-code && success="true" || success="false"
+          if [ "$success" = "false" ]; then
+            echo "README.md is outdated. Please run the following commands locally and push the file:"
+            echo "  make init"
+            echo "  make readme"
+            exit 1
+          fi
