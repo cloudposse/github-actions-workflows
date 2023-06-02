@@ -140,7 +140,7 @@ jobs:
       url: ${{ steps.deploy.outputs.webapp-url }}
     needs: [ preview ]
     steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.0
+      - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
         with:
           secret: ${{ secrets.secret-outputs-passphrase }}
