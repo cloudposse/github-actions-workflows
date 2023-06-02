@@ -75,7 +75,7 @@ jobs:
     runs-on: ["self-hosted"]
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.0.0
+        uses: aws-actions/configure-aws-credentials@v2.1.0
         with:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
