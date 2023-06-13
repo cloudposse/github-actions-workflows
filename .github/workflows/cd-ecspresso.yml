@@ -108,7 +108,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecspresso@0.1.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.2.0
         id: deploy
         with:
           image: ${{ steps.image.outputs.out }}
