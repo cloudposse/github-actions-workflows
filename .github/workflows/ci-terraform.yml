@@ -104,7 +104,7 @@ jobs:
           key: tflint-plugins-${{ env.TFLINT_CACHE_VER }}
 
       - name: tflint
-        uses: reviewdog/action-tflint@v1.18.0
+        uses: reviewdog/action-tflint@v1.19.0
         with:
           reporter: ${{ inputs.suggestions && 'github-pr-review' || 'local' }}
           fail_on_error: ${{ inputs.suggestions }}  # Set to true when all tflint issues are fixed in all tf repo release branches
