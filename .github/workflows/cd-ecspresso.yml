@@ -102,13 +102,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.2.0
+        uses: cloudposse/actions-private/ecspresso-environments@main
         id: environment
         with:
-          implementation_repository: cloudposse/actions-private
-          implementation_path: 'ecspresso-environments'
-          implementation_ref: main
-          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ inputs.environment }}
           namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
