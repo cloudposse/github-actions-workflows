@@ -19,12 +19,11 @@ name: |-
           tag: latest
           repository: $\{\{ github.event.repository.name \}\}
           environment: dev
-          spacelift-organization: $\{\{ inputs.spacelift-organization \}\}
+          enable-migration: $\{\{ inputs.enable-migration \}\}
+          support-rollback: $\{\{ inputs.support-rollback \}\}
         secrets:
           secret-outputs-passphrase: "$\{\{ secrets.secret-outputs-passphrase \}\}"
-          github-private-actions-pat: "$\{\{ secrets.github-private-actions-pat \}\}"
-          spacelift-api-key-id: "$\{\{ secrets.spacelift-api-key-id \}\}"
-          spacelift-api-key-secret: "$\{\{ secrets.spacelift-api-key-secret \}\}"
+          github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}  
   ```
 
 on:
@@ -50,6 +49,21 @@ on:
         description: "Environment name deploy to"
         type: string
         required: true
+      path:
+        description: "The path tp task definition template json file."
+        required: false
+        default: ./deploy/taskdef.json
+        type: string
+      enable-migration:
+        description: "Run DB migration"
+        type: boolean
+        required: false
+        default: false
+      support-rollback:
+        description: "Perform rollback on failure"
+        type: boolean
+        required: false
+        default: false
       matrix-step-name:
         description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
@@ -75,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
-      url: ${{ steps.deploy.outputs.webapp-url }}
+      url: ${{ steps.result.outputs.webapp-url }}
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
@@ -107,8 +121,42 @@ jobs:
           role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
+      - name: Run DB Migration
+        uses: cloudposse/github-action-run-ecspresso@0.1.0
+        continue-on-error: true
+        if: ${{ inputs.enable-migration }}
+        id: db_migrate
+        with:
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ${{ inputs.path }}
+          overrides: |-
+            {
+              "containerOverrides":[
+                {
+                  "name": "app",
+                  "environment": [{
+                    "name": "RUN_DB_MIGRATION",
+                    "value": "true"
+                  }]
+                }
+              ]
+            }
+        env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecspresso@0.2.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.4.0
+        continue-on-error: true
+        if: ${{ steps.db_migrate.outcome != 'failure' }}
         id: deploy
         with:
           image: ${{ steps.image.outputs.out }}
@@ -118,8 +166,58 @@ jobs:
           debug: false
           cluster: ${{ steps.environment.outputs.cluster }}
           application: ${{ steps.environment.outputs.name }}
-          taskdef-path: ./deploy/taskdef.json
+          taskdef-path: ${{ inputs.path }}
+          mirror_to_s3_bucket: ${{ steps.environment.outputs.s3-bucket }}
+          timeout: 10m
         env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
           ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
           ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
+      - name: Run DB Rollback
+        uses: cloudposse/github-action-run-ecspresso@0.1.0
+        if: ${{ inputs.enable-migration && inputs.support-rollback && ( steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure' ) }}
+        id: db_rollback
+        with:
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ${{ inputs.path }}
+          overrides: |-
+            {
+              "containerOverrides":[
+                {
+                  "name": "app",
+                  "environment": [{
+                    "name": "RUN_DB_ROLLBACK",
+                    "value": "true"
+                  }]
+                }
+              ]
+            }
+        env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
+      - name: Fail
+        if: ${{ steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure' }}
+        uses: cutenode/action-always-fail@v1.0.0
+
+      - uses: Produce8/actions-aws-ssm-params-to-env@1.1.0
+        with:
+          ssm-path: ${{ steps.environment.outputs.ssm-path }}
+          prefix: SSM_URL_
+          decryption: true
+
+      - name: Output web app url
+        id: result
+        run: |
+          echo "webapp-url=${SSM_URL_0}" >> $GITHUB_OUTPUT

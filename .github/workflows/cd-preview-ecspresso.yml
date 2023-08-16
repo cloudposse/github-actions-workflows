@@ -9,7 +9,7 @@ name: |-
     name: Feature Branch
     on:
       pull_request:
-        branches: [ 'master' ]
+        branches: [ 'main' ]
         types: [opened, synchronize, reopened, closed, labeled, unlabeled]
   
     jobs:
@@ -26,9 +26,7 @@ name: |-
           exclusive: true
           env-label: |
             qa1: deploy/qa1
-            qa2: deploy/qa2
-            qa3: deploy/qa3
-            qa4: deploy/qa4
+            qa2: deploy/qa2  
         secrets:
           secret-outputs-passphrase: $\{\{ secrets.secret-outputs-passphrase \}\}
           github-private-actions-pat: $\{\{ secrets.github-private-actions-pat \}\}
@@ -57,6 +55,11 @@ on:
         description: "The fully-formed ref of the branch or tag that triggered the workflow run"
         required: true
         type: string
+      path:
+        description: "The path to task definition template json file."
+        required: false
+        default: ./deploy/taskdef.json
+        type: string
       open:
         description: "Pull Request open/close state. Set true if opened"
         required: true
@@ -76,6 +79,16 @@ on:
         type: string
         default: |
           preview: deploy
+      enable-migration:
+        description: "Run DB migration"
+        type: boolean
+        required: false
+        default: false
+      support-rollback:
+        description: "Perform rollback on failure"
+        type: boolean
+        required: false
+        default: false
       matrix-step-name:
         description: "Matrix step name - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
@@ -100,6 +113,7 @@ permissions:
 
 jobs:
   preview:
+    name: preview // controller
     runs-on: ubuntu-latest
     steps:
       - name: Preview deployments controller
@@ -124,7 +138,7 @@ jobs:
         env: ${{ fromJson(needs.preview.outputs.deploy_envs) }}
     environment:
       name: ${{ matrix.env }}
-      url: ${{ steps.deploy.outputs.webapp-url }}
+      url: ${{ steps.result.outputs.webapp-url }}
     needs: [ preview ]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.1
@@ -134,7 +148,7 @@ jobs:
           op: decode
           in: ${{ inputs.image }}
 
-      - name: Deactive environment
+      - name: Deactivate environment
         uses: bobheadxi/deployments@v1
         if: ${{ inputs.exclusive }}
         with:
@@ -155,7 +169,7 @@ jobs:
           implementation_ref: main
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ matrix.env }}
-          namespace: ${{ inputs.environment }}
+          namespace: ${{ needs.preview.outputs.namespace }}
           repository: ${{ inputs.repository }}
           application: ${{ inputs.app }}
 
@@ -166,8 +180,42 @@ jobs:
           role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
+      - name: Run DB Migration
+        uses: cloudposse/github-action-run-ecspresso@0.1.0
+        continue-on-error: true
+        if: ${{ inputs.enable-migration }}
+        id: db_migrate
+        with:
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ${{ inputs.path }}
+          overrides: |-
+            {
+              "containerOverrides":[
+                {
+                  "name": "app",
+                  "environment": [{
+                    "name": "RUN_DB_MIGRATION",
+                    "value": "true"
+                  }]
+                }
+              ]
+            }
+        env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecspresso@0.2.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.4.0
+        continue-on-error: true
+        if: ${{ steps.db_migrate.outcome != 'failure' }}
         id: deploy
         with:
           image: ${{ steps.image.outputs.out }}
@@ -177,11 +225,60 @@ jobs:
           debug: false
           cluster: ${{ steps.environment.outputs.cluster }}
           application: ${{ steps.environment.outputs.name }}
-          taskdef-path: ./deploy/taskdef.json
+          taskdef-path: ${{ inputs.path }}
+          timeout: 10m
         env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
           ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
           ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
+      - name: Run DB Rollback
+        uses: cloudposse/github-action-run-ecspresso@0.1.0
+        if: ${{ inputs.enable-migration && inputs.support-rollback && ( steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure' ) }}
+        id: db_rollback
+        with:
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ${{ inputs.path }}
+          overrides: |-
+            {
+              "containerOverrides":[
+                {
+                  "name": "app",
+                  "environment": [{
+                    "name": "RUN_DB_ROLLBACK",
+                    "value": "true"
+                  }]
+                }
+              ]
+            }
+        env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
+      - name: Fail
+        if: ${{ steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure' }}
+        uses: cutenode/action-always-fail@v1.0.0
+
+      - uses: Produce8/actions-aws-ssm-params-to-env@1.1.0
+        with:
+          ssm-path: ${{ steps.environment.outputs.ssm-path }}
+          prefix: SSM_URL_
+          decryption: true
+
+      - name: Output web app url
+        id: result
+        run: |
+          echo "webapp-url=${SSM_URL_0}" >> $GITHUB_OUTPUT
 
   cleanup:
     runs-on: ubuntu-latest
@@ -196,6 +293,13 @@ jobs:
       contents: read
     needs: [ preview ]
     steps:
+      - uses: cloudposse/github-action-secret-outputs@0.1.1
+        id: image
+        with:
+          secret: ${{ secrets.secret-outputs-passphrase }}
+          op: decode
+          in: ${{ inputs.image }}
+
       - name: Seek deployment
         uses: cloudposse/github-action-seek-deployment@0.1.0
         id: deployment
@@ -205,13 +309,67 @@ jobs:
           ref: ${{ inputs.ref }}
           status: success
 
-      - name: Inactivate deployment
+      - name: Deactivate deployment
         uses: chrnorm/deployment-status@v2.0.0
         if: ${{ steps.deployment.outputs.id != '' }}
         with:
           state: inactive
           token: ${{ github.token }}
           deployment-id: ${{ steps.deployment.outputs.id }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Environment Info
+        uses: cloudposse/github-action-interface-environment@0.2.0
+        id: environment
+        with:
+          implementation_repository: cloudposse/actions-private
+          implementation_path: 'ecspresso-environments'
+          implementation_ref: main
+          implementation_github_pat: ${{ secrets.github-private-actions-pat }}
+          environment: ${{ matrix.env }}
+          namespace: ${{ needs.preview.outputs.namespace }}
+          repository: ${{ inputs.repository }}
+          application: ${{ inputs.app }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2.0.0
+        with:
+          aws-region: ${{ steps.environment.outputs.region }}
+          role-to-assume: ${{ steps.environment.outputs.role }}-gha
+          role-skip-session-tagging: true
+
+      - name: Run DB Rollback
+        uses: cloudposse/github-action-run-ecspresso@0.1.0
+        if: ${{ inputs.enable-migration && inputs.support-rollback }}
+        id: db_rollback
+        with:
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+          region: ${{ steps.environment.outputs.region }}
+          debug: false
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ${{ inputs.path }}
+          overrides: |-
+            {
+              "containerOverrides":[
+                {
+                  "name": "app",
+                  "environment": [{
+                    "name": "RUN_DB_ROLLBACK",
+                    "value": "true"
+                  }]
+                }
+              ]
+            }
+        env:
+          STAGE:  ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
+          ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
+          ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
 
       - name: Cleanup label
         uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
