@@ -132,3 +132,4 @@ jobs:
           github-pat: ${{ secrets.github-private-actions-pat }}
           repository: ${{ inputs.organization }}/${{ inputs.repository }}
           ref: ${{ github.sha }}
+          synchronously: ${{ inputs.synchronously }}
