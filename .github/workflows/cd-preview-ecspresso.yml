@@ -174,7 +174,7 @@ jobs:
           application: ${{ inputs.app }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
+        uses: aws-actions/configure-aws-credentials@v3.0.2
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.role }}-gha
@@ -334,7 +334,7 @@ jobs:
           application: ${{ inputs.app }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.0.0
+        uses: aws-actions/configure-aws-credentials@v3.0.2
         with:
           aws-region: ${{ steps.environment.outputs.region }}
           role-to-assume: ${{ steps.environment.outputs.role }}-gha
