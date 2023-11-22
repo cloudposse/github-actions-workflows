@@ -1,0 +1,105 @@
+name: 👽 Atmos Terraform Plan Chunk (Reusable)
+run-name: 👽 Atmos Terraform Plan Chunk (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: "Type of machine to run the job on (in json format https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idruns-on)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+      stacks:
+        description: "Stacks"
+        required: true
+        type: string
+      drift-detection-mode-enabled:
+        description: "Indicate whether this action is used in drift detection workflow."
+        type: string
+        required: false
+        default: 'false'
+      terraform-state-table:
+        description: "The DynamoDB table where planfile metadata is stored."
+        type: string
+        required: true
+      terraform-state-bucket:
+        description: "The S3 Bucket where the planfiles are stored."
+        type: string
+        required: true
+      terraform-plan-role:
+        description: "The AWS role to be used to plan Terraform."
+        type: string
+        required: true
+      terraform-state-role:
+        description: "The AWS role to be used to retrieve the planfile from AWS."
+        type: string
+        required: true
+      aws-region:
+        description: "AWS region for assuming identity."
+        required: false
+        default: "us-east-1"
+        type: string
+      atmos-config-path:
+        description: "The path to the atmos.yaml file"
+        required: false
+        default: atmos.yaml
+        type: string
+      terraform-version:
+        description: 'The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.'
+        default: 'latest'
+        required: false
+        type: string
+      sha:
+        description: "SHA to use"
+        required: false
+        default: "${{ github.event.pull_request.head.sha }}"
+        type: string
+      enable-infracost:
+        description: "Whether to enable infracost summary. Requires secret `infracost-api-key` to be specified. Default: 'false"
+        default: 'false'
+        required: false
+        type: string
+
+    secrets:
+      infracost-api-key:
+        description: "Infracost API key"
+        required: false
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+jobs:
+  atmos-plan:
+    runs-on: ${{ fromJson(inputs.runs-on) }}
+    if: ${{ inputs.stacks != '{include:[]}' }}
+    strategy:
+      max-parallel: 10
+      fail-fast: false # Don't fail fast to avoid locking TF State
+      matrix: ${{ fromJson(inputs.stacks) }}
+    ## Avoid running the same stack in parallel mode (from different workflows)
+    concurrency:
+      group: ${{ matrix.stack_slug }}
+      cancel-in-progress: false
+    name: ${{ matrix.stack_slug }}
+    steps:
+      - uses: unfor19/install-aws-cli-action@v1
+
+      - name: Plan Atmos Component
+        uses: cloudposse/github-action-atmos-terraform-plan@v0
+        with:
+          component: ${{ matrix.component }}
+          stack: ${{ matrix.stack }}
+          component-path: ${{ matrix.component_path }}
+          drift-detection-mode-enabled: ${{ inputs.drift-detection-mode-enabled }}
+          terraform-plan-role: ${{ inputs.terraform-plan-role }}
+          terraform-state-bucket: ${{ inputs.terraform-state-bucket }}
+          terraform-state-role: ${{ inputs.terraform-state-role }}
+          terraform-state-table: ${{ inputs.terraform-state-table }}
+          atmos-config-path: ${{ inputs.atmos-config-path }}
+          aws-region: ${{ inputs.aws-region }}
+          terraform-version: ${{ inputs.terraform-version }}
+          enable-infracost: ${{ inputs.enable-infracost }}
+          infracost-api-key: ${{ secrets.infracost-api-key }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          sha: ${{ inputs.sha }}
