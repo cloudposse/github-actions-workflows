@@ -112,3 +112,4 @@ jobs:
           tflint_init: true
           working_directory: ${{ matrix.tfdir }}
           filter_mode: ${{ inputs.filter-mode }}
+          tflint_version: "v0.49.0"
