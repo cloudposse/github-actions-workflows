@@ -159,7 +159,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Environment Info
-        uses: cloudposse/github-action-interface-environment@0.2.0
+        uses: cloudposse/github-action-interface-environment@0.4.0
         id: environment
         with:
           implementation_repository: cloudposse/actions-private
