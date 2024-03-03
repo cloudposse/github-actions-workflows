@@ -89,7 +89,7 @@ jobs:
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -162,7 +162,7 @@ jobs:
     needs: [ promote-or-build ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.2.0

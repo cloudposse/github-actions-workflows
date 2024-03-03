@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - uses: mszostok/codeowners-validator@v0.7.4
         # Pull request from a fork

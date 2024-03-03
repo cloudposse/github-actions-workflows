@@ -158,7 +158,7 @@ jobs:
           desc: Environment purged
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Environment Info
         uses: cloudposse/github-action-interface-environment@0.4.0
@@ -318,7 +318,7 @@ jobs:
           deployment-id: ${{ steps.deployment.outputs.id }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Environment Info
         uses: cloudposse/github-action-interface-environment@0.4.0
