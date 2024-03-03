@@ -98,7 +98,7 @@ jobs:
 
       - name: cache tflint plugins
         id: cache-plugins
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: tflint-plugins-${{ env.TFLINT_CACHE_VER }}
