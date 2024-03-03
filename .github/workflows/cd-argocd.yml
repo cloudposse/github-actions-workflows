@@ -114,7 +114,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-argocd@0.5.0
+        uses: cloudposse/github-action-deploy-argocd@0.8.1
         id: deploy
         with:
           toolchain: ${{ inputs.toolchain }}
