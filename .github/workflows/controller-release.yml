@@ -67,7 +67,7 @@ jobs:
 
       - name: Fetch pull request for the given ref
         id: get-pull-request
-        uses: 8BitJonny/gh-get-current-pr@2.2.0
+        uses: 8BitJonny/gh-get-current-pr@3.0.0
         with:
           sha: ${{ inputs.sha }}
 
