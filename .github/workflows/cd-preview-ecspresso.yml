@@ -372,7 +372,7 @@ jobs:
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
 
       - name: Cleanup label
-        uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
+        uses: cloudposse/github-action-preview-labels-cleanup@0.1.1
         if: ${{ ! inputs.open }}
         with:
           labels_env: ${{ needs.preview.outputs.labels_env }}
