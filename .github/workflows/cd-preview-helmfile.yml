@@ -182,7 +182,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Seek deployment
-        uses: cloudposse/github-action-seek-deployment@0.1.0
+        uses: cloudposse/github-action-seek-deployment@0.1.1
         id: deployment
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
