@@ -234,7 +234,7 @@ jobs:
           deployment-id: ${{ steps.deployment.outputs.id }}
 
       - name: Cleanup label
-        uses: cloudposse/github-action-preview-labels-cleanup@0.1.0
+        uses: cloudposse/github-action-preview-labels-cleanup@0.1.1
         if: ${{ ! inputs.open }}
         with:
           labels_env: ${{ needs.preview.outputs.labels_env }}
