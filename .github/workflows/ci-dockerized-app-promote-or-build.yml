@@ -172,7 +172,7 @@ jobs:
 
       - name: Tests
         id: test
-        uses: cloudposse/github-action-docker-compose-test-run@0.1.2
+        uses: cloudposse/github-action-docker-compose-test-run@0.2.0
         with:
           workdir: ./apps/${{ inputs.app }}
           file: test/docker-compose.yml
