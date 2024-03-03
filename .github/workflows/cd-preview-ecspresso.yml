@@ -267,7 +267,7 @@ jobs:
 
       - name: Fail
         if: ${{ steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure' }}
-        uses: cutenode/action-always-fail@v1.0.0
+        uses: cutenode/action-always-fail@v1.0.1
 
       - uses: Produce8/actions-aws-ssm-params-to-env@1.1.0
         with:
