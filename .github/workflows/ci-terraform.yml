@@ -66,8 +66,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - id: set-matrix
+        # Ignore directories whose names start with .terraform or obsolete
         run: |
-          matrix=$(find ./ -name '*.tf' \
+          matrix=$(find .  -type d \( -name '.terraform*' -o -name 'obsolete*' \) -prune -o \
+            -name '*.tf' \
             -not -path '*/.terraform/*' \
             -exec dirname {} \; \
             | sort \
