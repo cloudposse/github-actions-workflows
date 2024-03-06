@@ -135,7 +135,7 @@ jobs:
       name: ${{ matrix.env }}
       url: ${{ steps.deploy.outputs.webapp-url }}
     steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.1
+      - uses: cloudposse/github-action-secret-outputs@0.1.2
         id: image
         with:
           secret: ${{ secrets.secret-outputs-passphrase }}
