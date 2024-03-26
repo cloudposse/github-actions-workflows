@@ -54,10 +54,6 @@ permissions:
   contents: write
   actions: write
 
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 jobs:
   context:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
