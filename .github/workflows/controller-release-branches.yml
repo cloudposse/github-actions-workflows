@@ -40,4 +40,4 @@ jobs:
   release-branch-manager:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
-      - uses: cloudposse/github-action-release-branch-manager@v1
+      - uses: cloudposse/github-action-release-branch-manager@v2
