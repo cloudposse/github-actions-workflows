@@ -1,0 +1,105 @@
+name: |-
+  CI - GitHub Action
+  
+  Lint and test github action
+  
+  ### Usage 
+  ```yaml
+    name: Validate Terraform
+    on:
+      workflow_call:
+    
+    permissions:
+      pull-requests: write
+      id-token: write
+      contents: read
+  
+    jobs:
+      ci-terraform:
+        uses: cloudposse/github-actions-workflows/.github/workflows/ci-terraform.yml@main
+        with:
+          suggestions: true
+          filter-mode: diff_context
+  ```
+on:
+  workflow_call:
+    inputs:
+      organization:
+        description: "Repository owner organization (ex. acme for repo acme/example)"
+        required: false
+        default: ${{ github.event.repository.owner.login }}
+        type: string
+      repository:
+        description: "Repository name (ex. example for repo acme/example)"
+        required: false
+        default: ${{ github.event.repository.name }}
+        type: string
+      ref:
+        description: "The fully-formed ref of the branch or tag that triggered the workflow run"
+        required: false
+        default: ${{ github.ref }}
+        type: string
+      tests-prefix:
+        description: "Workflows file name prefix to run as tests"
+        required: false
+        type: string
+        default: 'test-*'
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  context:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Workflows
+        id: workflows
+        shell: bash
+        run: |
+          TEST_FILES=$(find ./.github/workflows -type f -name "${{ inputs.tests-prefix }}" -exec basename {} \; | jq -MRc -s '. | split("\n") | map(select(. != ""))')
+          echo "list=${TEST_FILES}" >> $GITHUB_OUTPUT
+
+    outputs:
+      tests: ${{ steps.workflows.outputs.list }}
+
+  lint:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: YAML file validation
+        uses: mpoc/nexus-validate-using-remote-schema-action@main
+        with:
+          api-endpoint: https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/github-action.json
+          yaml-file: action.yml
+
+  test:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    if: ${{ needs.context.outputs.tests != '[]'  }}
+    strategy:
+      matrix:
+        env: ${{ fromJson(needs.context.outputs.tests) }}
+    needs: [ lint, context ]
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.6.5
+        with:
+          owner: ${{ inputs.organization }}
+          repo: ${{ inputs.repository }}
+          github_token: ${{ github.token }}
+          workflow_file_name: ${{ matrix.env }}
+          ref: ${{ inputs.ref }}
+          wait_interval: 10
+          client_payload: '{}'
+          propagate_failure: true
+          trigger_workflow: true
+          wait_workflow: true
