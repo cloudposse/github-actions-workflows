@@ -49,8 +49,9 @@ on:
         default: '["ubuntu-latest"]'
 
 jobs:
-  ci-readme:
+  branch-readme:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    if: ${{ github.event_name == 'push' }}
     environment: release
     steps:
       - uses: actions/create-github-app-token@v1
@@ -70,6 +71,25 @@ jobs:
       - uses: cloudposse-github-actions/readme@main
         with:
           token: ${{ steps.github-app.outputs.token }}
+          readme_enabled: true
+          banner_enabled: true
+          validate_readme: true
+          commit_method: 'commit'
+          commit_push_options: '--force-with-lease'
+
+  pr-readme:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          repository: ${{ inputs.repository }}
+          fetch-depth: 0
+
+      - uses: cloudposse-github-actions/readme@main
+        with:
           readme_enabled: true
           banner_enabled: true
           validate_readme: true
