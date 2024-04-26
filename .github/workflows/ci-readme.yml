@@ -77,9 +77,8 @@ jobs:
           commit_method: 'commit'
           commit_push_options: '--force-with-lease'
 
-  pr-readme:
+  validate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Checkout
         run: |-
