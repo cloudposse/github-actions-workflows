@@ -76,3 +76,11 @@ jobs:
           validate_readme: true
           commit_method: 'commit'
           commit_push_options: '--force-with-lease'
+
+  pr-readme:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout
+        run: |-
+          echo "Checkout ref: ${{ inputs.ref }}"
