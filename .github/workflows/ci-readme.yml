@@ -51,44 +51,27 @@ on:
 jobs:
   validate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    environment: release
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-app
+        with:
+          app-id: ${{ vars.BOT_GITHUB_APP_ID }}
+          private-key: ${{ secrets.BOT_GITHUB_APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
           repository: ${{ inputs.repository }}
+          fetch-depth: 0
+          token: ${{ steps.github-app.outputs.token }}
 
-      - name: Generate readme
-        shell: bash
-        run: |
-          make init
-          make readme/build
-
-      - name: Check readme
-        id: readme_diff
-        shell: bash
-        run: git diff --exit-code
-        continue-on-error: true
-
-      - name: Auto-update README.md for bot pull requests
-        id: auto_commit
-        if: | 
-          steps.readme_diff.outcome == 'failure' && 
-          startsWith(inputs.ref, 'renovate/') &&
-          inputs.suggestions
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git commit -a -m "Auto-update README.md"
-          git push
-
-      - name: Status check
-        shell: bash
-        run: | 
-          git diff --exit-code && success="true" || success="false"
-          if [ "$success" = "false" ]; then
-            echo "README.md is outdated. Please run the following commands locally and push the file:"
-            echo "  make init"
-            echo "  make readme"
-            exit 1
-          fi
+      - uses: cloudposse-github-actions/readme@main
+        with:
+          token: ${{ steps.github-app.outputs.token }}
+          readme_enabled: true
+          banner_enabled: true
+          validate_readme: true
+          commit_method: 'commit'
+          commit_push_options: '--force-with-lease'
