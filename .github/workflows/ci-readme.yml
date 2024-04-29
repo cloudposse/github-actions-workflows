@@ -49,9 +49,8 @@ on:
         default: '["ubuntu-latest"]'
 
 jobs:
-  branch-readme:
+  validate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    if: ${{ github.event_name == 'push' }}
     environment: release
     steps:
       - uses: actions/create-github-app-token@v1
@@ -76,10 +75,3 @@ jobs:
           validate_readme: true
           commit_method: 'commit'
           commit_push_options: '--force-with-lease'
-
-  validate:
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
-    steps:
-      - name: Checkout
-        run: |-
-          echo "Checkout ref: ${{ inputs.ref }}"
