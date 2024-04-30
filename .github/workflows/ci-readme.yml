@@ -74,4 +74,3 @@ jobs:
           banner_enabled: true
           validate_readme: true
           commit_method: 'commit'
-          commit_push_options: '--force-with-lease'
