@@ -67,7 +67,7 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.github-app.outputs.token }}
 
-      - uses: cloudposse-github-actions/readme@github-token-for-checkout
+      - uses: cloudposse-github-actions/readme@0.2.0
         with:
           token: ${{ steps.github-app.outputs.token }}
           readme_enabled: true
