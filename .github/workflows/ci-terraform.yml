@@ -108,9 +108,9 @@ jobs:
       - name: tflint
         uses: reviewdog/action-tflint@v1.22.0
         with:
-          reporter: ${{ inputs.suggestions && 'github-pr-review' || 'local' }}
-          fail_on_error: false
-          # ${{ inputs.suggestions }}  # Set to true when all tflint issues are fixed in all tf repo release branches
+          reporter: "local"
+          # ${{ inputs.suggestions && 'github-pr-review' || 'local' }}
+          fail_on_error: ${{ inputs.suggestions }}  # Set to true when all tflint issues are fixed in all tf repo release branches
           tflint_rulesets: ${{ env.TFLINT_PLUGINS }}
           tflint_init: true
           working_directory: ${{ matrix.tfdir }}
