@@ -14,6 +14,7 @@ name: |-
         uses: cloudposse/github-actions-workflows/.github/workflows/ci-codeowners-full.yml@main
         with:
           is_fork: $\{\{ github.event.pull_request.head.repo.full_name != github.repository \}\}
+        secrets: inherit
   ```
 on:
   workflow_call:
@@ -27,14 +28,11 @@ on:
         type: string
         required: false
         default: '["ubuntu-latest"]'
-    secrets:
-      github_access_token:
-        description: "GitHub API token"
-        required: false
 
 jobs:
-  validate:
+  syntax:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    name: Validate (syntax)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,20 +40,36 @@ jobs:
       - uses: mszostok/codeowners-validator@v0.7.4
         # Pull request from a fork
         name: "Validate CODEOWNERS"
-        if: ${{ inputs.is_fork }}
         with:
           checks: "syntax,duppatterns"
           owner_checker_allow_unowned_patterns: "false"
 
+  owners:
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    name: Validate (owners)
+    if: ${{ ! inputs.is_fork }}
+    environment: release    
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: github-app
+        with:
+          app-id: ${{ vars.BOT_GITHUB_APP_ID }}
+          private-key: ${{ secrets.BOT_GITHUB_APP_PRIVATE_KEY }}
+          
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.github-app.outputs.token }}
+
       - uses: mszostok/codeowners-validator@v0.7.4
         # Main branch / Pull request from the same repo
         name: "Validate CODEOWNERS"
-        if: ${{ ! inputs.is_fork }}
         with:
           # For now, remove "files" check to allow CODEOWNERS to specify non-existent
           # files so we can use the same CODEOWNERS file for Terraform and non-Terraform repos
           #   checks: "files,syntax,owners,duppatterns"
-          checks: "syntax,duppatterns,owners"
+          checks: "owners"
           owner_checker_allow_unowned_patterns: "false"
           # Admin GitHub access token is required only if the `owners` check is enabled
-          github_access_token: "${{ secrets.github_access_token }}"
+          github_access_token: ${{ steps.github-app.outputs.token }}
+          
