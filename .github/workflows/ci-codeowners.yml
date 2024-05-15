@@ -39,7 +39,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: mszostok/codeowners-validator@v0.7.4
+      - uses: mszostok/codeowners-validator@v0.7.1
         # Pull request from a fork
         name: "Validate CODEOWNERS"
         if: ${{ inputs.is_fork }}
@@ -47,7 +47,7 @@ jobs:
           checks: "syntax,duppatterns"
           owner_checker_allow_unowned_patterns: "false"
 
-      - uses: mszostok/codeowners-validator@v0.7.4
+      - uses: mszostok/codeowners-validator@v0.7.1
         # Main branch / Pull request from the same repo
         name: "Validate CODEOWNERS"
         if: ${{ ! inputs.is_fork }}
