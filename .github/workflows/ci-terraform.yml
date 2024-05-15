@@ -41,6 +41,7 @@ on:
 jobs:
   format:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    name: Format HCL
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,6 +62,7 @@ jobs:
         run: git diff --exit-code
 
   lint-find-dirs:
+    name: Find modules
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - uses: actions/checkout@v4
@@ -81,6 +83,7 @@ jobs:
 
   lint:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    name: Lint (${{ matrix.tfdir }})
     needs: lint-find-dirs
     strategy:
       fail-fast: false
