@@ -24,14 +24,6 @@ name: |-
 on:
   workflow_call:
     inputs:
-      suggestions:
-        description: "Enable Reviewdog suggestions (pull request only)"
-        type: boolean
-        required: true
-      filter-mode:
-        description: "Reviewdog filter mode"
-        type: string
-        required: true
       ref:
         description: "Checkout ref"
         type: string
