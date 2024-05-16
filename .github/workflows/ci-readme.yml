@@ -43,6 +43,7 @@ on:
 jobs:
   validate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    name: "Readme"
     environment: release
     steps:
       - uses: actions/create-github-app-token@v1
