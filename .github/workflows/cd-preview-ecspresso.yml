@@ -97,6 +97,11 @@ on:
         description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -114,7 +119,7 @@ permissions:
 jobs:
   preview:
     name: preview // controller
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Preview deployments controller
         uses: cloudposse/github-action-preview-environment-controller@0.11.0
@@ -131,7 +136,7 @@ jobs:
       destroy_envs: ${{ steps.controller.outputs.destroy_envs }}
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     if: ${{ needs.preview.outputs.deploy_envs != '[]'  }}
     strategy:
       matrix:
@@ -281,7 +286,7 @@ jobs:
           echo "webapp-url=${SSM_URL_0}" >> $GITHUB_OUTPUT
 
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     if: ${{ needs.preview.outputs.destroy_envs != '[]'  }}
     strategy:
       matrix:

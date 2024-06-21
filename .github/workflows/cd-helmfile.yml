@@ -43,6 +43,11 @@ on:
         description: "Environment name deploy to"
         type: string
         required: true
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["self-hosted"]'
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -57,7 +62,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ["self-hosted"]
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     environment:
       name: ${{ inputs.environment }}
       url: ${{ steps.deploy.outputs.webapp-url }}

@@ -29,6 +29,11 @@ on:
         required: false
         default: ${{ github.sha }}
         type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
 
     secrets:
       github-private-actions-pat:
@@ -36,7 +41,7 @@ on:
         required: true
 jobs:
   draft:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       # Drafts your next Release notes as Pull Requests are merged into "master"
       - name: Create/Update Draft release
