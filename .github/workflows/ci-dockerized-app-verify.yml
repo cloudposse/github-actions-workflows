@@ -45,6 +45,11 @@ on:
         description: "Release version tag"
         required: true
         type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     secrets:
       ecr-region:
         description: "ECR AWS region"
@@ -72,7 +77,7 @@ permissions:
 
 jobs:
   pull:
-    runs-on: ["self-hosted"]
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2

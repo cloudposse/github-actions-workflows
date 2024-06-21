@@ -23,10 +23,15 @@ on:
         description: Stacks
         required: false
         type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
 
 jobs:
   create-files:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
