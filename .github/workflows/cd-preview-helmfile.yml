@@ -73,7 +73,7 @@ on:
         description: "Overrides job runs-on setting (json-encoded list)"
         type: string
         required: false
-        default: '["ubuntu-latest"]'
+        default: '["self-hosted"]'
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"

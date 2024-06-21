@@ -49,7 +49,7 @@ on:
         description: "Overrides job runs-on setting (json-encoded list)"
         type: string
         required: false
-        default: '["ubuntu-latest"]'
+        default: '["self-hosted"]'
     secrets:
       ecr-region:
         description: "ECR AWS region"
