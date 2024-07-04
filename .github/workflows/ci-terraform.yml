@@ -79,8 +79,8 @@ jobs:
         run: |
           # when running in test-harness, need to mark the directory safe for git operations
           make git-safe-directory
-          find ./ -type f --name "*.tf"
-          MODIFIED_MODULES=($(find ./ -type f --name "*.tf" | xargs -I{} dirname {} | sort | uniq | xargs -I{} realpath {} || true))
+          find ./ -type f -name "*.tf"
+          MODIFIED_MODULES=($(find ./ -type f -name "*.tf" | xargs -I{} dirname {} | sort | uniq | xargs -I{} realpath {} || true))
           pass=true
           for dir in "${MODIFIED_MODULES[@]}"; do
             printf "\n\nBegin testing in $dir\n"
