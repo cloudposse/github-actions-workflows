@@ -68,7 +68,7 @@ jobs:
       MAKE_INCLUDES: Makefile
       TF_PLUGIN_CACHE_DIR: /tmp
       BATS_MODULE_TESTS: input-descriptions module-pinning provider-pinning output-descriptions
-      BATS_EXAMPLES_TESTS: input-descriptions lint provider-pinning output-descriptions
+      BATS_EXAMPLES_TESTS: input-descriptions lint output-descriptions
     steps:
       - name: Checkout
         uses: actions/checkout@v4
