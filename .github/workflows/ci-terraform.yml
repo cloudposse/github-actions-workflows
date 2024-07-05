@@ -87,7 +87,7 @@ jobs:
             (
               status=pass
               cd $dir
-              [[ $dir =~ examples/.* ]] && tests=$BATS_EXAMPLES_TESTS || tests=$BATS_MODULE_TESTS
+              [[ $dir =~ .*/examples/.* ]] && tests=$BATS_EXAMPLES_TESTS || tests=$BATS_MODULE_TESTS
               for test in $tests; do
                 printf "\n\nRunning ${test} in $dir\n"
                 bats -t /test/terraform/${test}.bats || status=fail
