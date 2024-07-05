@@ -83,7 +83,7 @@ jobs:
           MODIFIED_MODULES=($(find . -type f -name "*.tf" | xargs -I{} dirname {} | sort | uniq | grep  -v ^./.git/ || true))
           pass=true
           for relative_dir in "${MODIFIED_MODULES[@]}"; do
-            dir = $(realpath $relative_dir)
+            dir=$(realpath $relative_dir)
             printf "\n\nBegin testing in $dir\n"
             (
               status=pass
