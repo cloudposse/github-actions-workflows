@@ -125,7 +125,7 @@ jobs:
           registry: ${{ secrets.registry }}
           workdir: ./apps/${{ inputs.app }}
 
-      - uses: cloudposse/github-action-yaml-config-query@0.1.3
+      - uses: cloudposse/github-action-yaml-config-query@0.1.4
         id: result
         with:
           ## There is a bug in GHA - skipped step return `success` outcome. So we can not rely only on steps.build.outcome
