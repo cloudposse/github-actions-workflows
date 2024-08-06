@@ -67,7 +67,7 @@ jobs:
 
       - name: Fetch pull request for the given ref
         id: get-pull-request
-        uses: 8BitJonny/gh-get-current-pr@3.0.0
+        uses: cloudposse-github-actions/get-pr@v0
         with:
           sha: ${{ inputs.sha }}
 
@@ -87,7 +87,7 @@ jobs:
         id: release
         uses: release-drafter/release-drafter@v6
         with:
-          publish: ${{ inputs.publish && !contains(steps.get-pull-request.outputs.pr_labels, 'no-release') }}
+          publish: ${{ inputs.publish && !contains(steps.get-pull-request.outputs.labels, 'no-release') }}
           config-name: ${{ inputs.config-name }}
           commitish: ${{ inputs.ref_name }}
         env:
