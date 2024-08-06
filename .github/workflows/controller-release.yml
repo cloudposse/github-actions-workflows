@@ -67,7 +67,7 @@ jobs:
 
       - name: Fetch pull request for the given ref
         id: get-pull-request
-        uses: cloudposse-github-actions/get-pr@v0
+        uses: cloudposse-github-actions/get-pr@v1
         with:
           sha: ${{ inputs.sha }}
 
