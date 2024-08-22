@@ -122,7 +122,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Preview deployments controller
-        uses: cloudposse/github-action-preview-environment-controller@0.11.0
+        uses: cloudposse/github-action-preview-environment-controller@v0.11.1
         id: controller
         with:
           labels: ${{ inputs.labels }}
