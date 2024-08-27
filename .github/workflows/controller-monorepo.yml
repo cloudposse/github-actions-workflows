@@ -25,6 +25,11 @@ on:
         description: Directory with applications
         required: true
         type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     outputs:
       apps:
         description: "Applications"
@@ -38,7 +43,7 @@ on:
 
 jobs:
   monorepo:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

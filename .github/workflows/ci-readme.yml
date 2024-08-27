@@ -24,14 +24,6 @@ name: |-
 on:
   workflow_call:
     inputs:
-      suggestions:
-        description: "Enable Reviewdog suggestions (pull request only)"
-        type: boolean
-        required: true
-      filter-mode:
-        description: "Reviewdog filter mode"
-        type: string
-        required: true
       ref:
         description: "Checkout ref"
         type: string
@@ -51,6 +43,7 @@ on:
 jobs:
   validate:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
+    name: "Readme"
     environment: release
     steps:
       - uses: actions/create-github-app-token@v1
@@ -67,7 +60,7 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.github-app.outputs.token }}
 
-      - uses: cloudposse-github-actions/readme@0.2.0
+      - uses: cloudposse-github-actions/readme@v0
         with:
           token: ${{ steps.github-app.outputs.token }}
           readme_enabled: true

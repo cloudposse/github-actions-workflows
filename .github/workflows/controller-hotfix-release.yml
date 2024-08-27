@@ -24,13 +24,18 @@ on:
         description: "The fully-formed ref of the branch or tag that triggered the workflow run"
         required: true
         type: string
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     outputs:
       version:
         description: Release version
         value: ${{ jobs.create.outputs.version }}
 jobs:
   create:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

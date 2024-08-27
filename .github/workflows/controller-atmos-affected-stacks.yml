@@ -23,6 +23,11 @@ on:
         description: The head ref to checkout. If not provided, the head default branch is used.
         type: string
         required: false
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
     outputs:
       stacks:
         description: "Affected stacks"
@@ -33,7 +38,7 @@ on:
 
 jobs:
   get-affected-property-stacks:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       has-affected-stacks: ${{ steps.matrix.outputs.matrix!='{"include":[]}'}}

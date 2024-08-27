@@ -69,6 +69,11 @@ on:
         type: string
         default: |
           preview: deploy
+      runs-on:
+        description: "Overrides job runs-on setting (json-encoded list)"
+        type: string
+        required: false
+        default: '["self-hosted"]'
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -85,7 +90,7 @@ permissions:
 
 jobs:
   preview:
-    runs-on: ["self-hosted"]
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
       - name: Preview deployments controller
         uses: cloudposse/github-action-preview-environment-controller@0.11.0
@@ -103,7 +108,7 @@ jobs:
 
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     needs: [ preview ]
     if: ${{ needs.preview.outputs.deploy_envs != '[]'  }}
     strategy:
@@ -166,7 +171,7 @@ jobs:
 
 
   destroy:
-    runs-on: ["self-hosted"]
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
     needs: [ preview ]
     if: ${{ needs.preview.outputs.destroy_envs != '[]'  }}
     strategy:

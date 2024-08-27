@@ -36,7 +36,5 @@ jobs:
   ci-readme:
     uses: cloudposse/github-actions-workflows/.github/workflows/ci-readme.yml@main
     with:
-      filter-mode: nofilter
-      suggestions: false
       runs-on: ${{ inputs.runs-on }}
     secrets: inherit      
