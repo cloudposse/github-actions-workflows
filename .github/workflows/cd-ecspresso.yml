@@ -159,7 +159,7 @@ jobs:
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecspresso@0.5.0
+        uses: cloudposse/github-action-deploy-ecspresso@0.6.0
         continue-on-error: true
         if: ${{ steps.db_migrate.outcome != 'failure' }}
         id: deploy
