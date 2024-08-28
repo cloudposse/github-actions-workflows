@@ -118,7 +118,7 @@ jobs:
       - name: Build
         if: ${{ inputs.force-build || steps.promote.outcome == 'failure' }}
         id: build
-        uses: cloudposse/github-action-docker-build-push@1.15.0
+        uses: cloudposse/github-action-docker-build-push@1.16.0
         with:
           organization: ${{ inputs.organization }}
           repository: ${{ inputs.repository }}/${{ inputs.app }}
