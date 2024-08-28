@@ -35,7 +35,7 @@ jobs:
   major-release-tagger:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     steps:
-      - uses: cloudposse/github-action-major-release-tagger@v1
+      - uses: cloudposse/github-action-major-release-tagger@v2
 
   release-branch-manager:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
