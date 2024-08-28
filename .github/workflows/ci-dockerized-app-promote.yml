@@ -95,7 +95,7 @@ jobs:
 
       - name: Context
         id: context
-        uses: cloudposse/github-action-yaml-config-query@0.1.3
+        uses: cloudposse/github-action-yaml-config-query@0.1.4
         with:
           query: .${{ inputs.app == '' }}
           config: |
