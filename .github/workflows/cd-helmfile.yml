@@ -97,7 +97,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-helmfile@0.6.0
+        uses: cloudposse/github-action-deploy-helmfile@v0.7.2
         id: deploy
         with:
           aws-region: ${{ steps.environment.outputs.region }}
