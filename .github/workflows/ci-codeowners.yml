@@ -37,7 +37,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: mszostok/codeowners-validator@v0.7.1
+      - uses: mszostok/codeowners-validator@v0.7.4
         # Pull request from a fork
         name: "Validate CODEOWNERS"
         with:
