@@ -32,7 +32,7 @@ on:
 jobs:
   syntax:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    name: Validate (syntax)
+    name: Validate Codeowners (syntax)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
 
   owners:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    name: Validate (owners)
+    name: Validate Codeowners (owners)
     if: ${{ false && ! inputs.is_fork }}
     environment: release    
     steps:
