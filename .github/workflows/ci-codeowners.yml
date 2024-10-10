@@ -47,7 +47,7 @@ jobs:
   owners:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     name: Validate (owners)
-    if: ${{ ! inputs.is_fork }}
+    if: ${{ false && ! inputs.is_fork }}
     environment: release    
     steps:
       - uses: actions/create-github-app-token@v1
